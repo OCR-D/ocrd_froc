@@ -1,0 +1,8 @@
+*.egg-info
+*.pyc
+__pycache__
+tests/assets
+repo/assets
+tests/test-params.json
+/build
+/dist
