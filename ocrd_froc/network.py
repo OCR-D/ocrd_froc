@@ -155,13 +155,15 @@ class SelectiveOCR(torch.nn.Module):
         self.classifier = classifier
         self.models     = models
     
-    def forward(self, x):
+    def forward(self, x, model_idx=None):
         if x.shape[0]!=1:
             raise Exception('SelectiveOCR cannot work on batches, sorry')
-        scores = self.classifier(x).sum(axis=1)#.view(-1,13).mean(axis=1)
-        n = torch.argmax(scores[0,:]).item()
-        n = n if n in self.models else 0
-        return self.models[n](x)
+        if not model_idx :
+            scores = self.classifier(x).sum(axis=1)#.view(-1,13).mean(axis=1)
+            n = torch.argmax(scores[0,:]).item()
+            model_idx = n
+        model_idx = model_idx if model_idx in self.models else 0
+        return self.models[model_idx](x)
 
 class SplitOCR(torch.nn.Module):
     def __init__(self, classifier, models):
@@ -216,12 +218,12 @@ class COCR(torch.nn.Module):
         for n in self.models:
             self.models[n].load(os.path.join(folder, '%s' % n), device=device)
         
-    def forward(self, x):
+    def forward(self, x, fast_cocr=True):
         scores = F.softmax(self.classifier(x), dim=2)
         res = 0
         for n in self.models:
             s = scores[:, :, n].unsqueeze(-1)
-            if torch.max(s)<0.1:
+            if fast_cocr and torch.max(s)<0.1:
                 continue
             y = self.models[n](x)
             res += y * s

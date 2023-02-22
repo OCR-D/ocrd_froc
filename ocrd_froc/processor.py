@@ -14,24 +14,17 @@ from ocrd_utils import (
 from ocrd_utils import getLogger, make_file_id, MIMETYPE_PAGE
 from ocrd_models.ocrd_page import (
     to_xml,
-    TextStyleType
+    TextStyleType,
+    TextEquivType,
 )
 from ocrd_modelfactory import page_from_file
-
-from .typegroups_classifier import TypegroupsClassifier
+from froc import Froc
 from .constants import OCRD_TOOL
 
-IGNORED_TYPES = [
-    'Adornment',
-    'Book covers and other irrelevant data',
-    'Empty Pages',
-    'Woodcuts - Engravings'
-]
-
-class TypegroupsClassifierProcessor(Processor):
+class FROCProcessor(Processor):
 
     def __init__(self, *args, **kwargs):
-        kwargs['ocrd_tool'] = OCRD_TOOL['tools']['ocrd-typegroups-classifier']
+        kwargs['ocrd_tool'] = OCRD_TOOL['tools']['ocrd-froc']
         kwargs['version'] = OCRD_TOOL['version']
         super().__init__(*args, **kwargs)
         if hasattr(self, 'output_file_grp'):
@@ -39,54 +32,60 @@ class TypegroupsClassifierProcessor(Processor):
             self.setup()
 
     def setup(self):
+
         if 'network' not in self.parameter:
-            if self.parameter['level'] == 'line' :
-                self.parameter['network'] = resource_filename(__name__, 'models/col_classifier.tgc')
-            else :
-                self.parameter['network'] = resource_filename(__name__, 'models/densenet121.tgc')
+            self.parameter['network'] = resource_filename(__name__, 'models/default.froc')
         
         network_file = self.resolve_resource(self.parameter['network'])
-        self.classifier = TypegroupsClassifier.load(network_file)
+        self.froc = Froc.load(network_file)
 
     def _process_segment(self, segment, image):
-        LOG = getLogger('ocrd_typegroups_classifier')
-        result = self.classifier.run(image, stride=self.parameter['stride'])
-        active_types = self.parameter['active_classes']
-        script_score_map = dict()
-        script_score_sum = 0
-        script_score_max = 0
-        ignore_score_max = 0
-        for typegroup in self.classifier.classMap.cl2id:
-            score = max(0, result[typegroup])
-            if len(active_types) and typegroup not in active_types:
-                ignore_score_max = max(ignore_score_max, score)
-                continue
-            if typegroup in IGNORED_TYPES:
-                ignore_score_max = max(ignore_score_max, score)
-                continue
-            script_score_max = max(script_score_max, score)
-            script_score_sum += score
-            script_score_map[typegroup] = score
-        if ignore_score_max > script_score_max:
-            segment.set_primaryScript(None)
-            LOG.warning('Detected only noise on "%s": noise_max=%.2f > script_max=%.2f',
-                        segment.id, ignore_score_max, script_score_max)
-        else:
-            script_score_map = dict(sorted(script_score_map.items(), key=lambda x: x[1], reverse=True))
-            output = ''
-            for typegroup, score in script_score_map.items():
-                score = round(100 * score / script_score_sum)
+        textStyle = segment.get_TextStyle()
+        if not textStyle:
+            textStyle = TextStyleType()
+            segment.set_TextStyle(textStyle) 
+        
+
+        method = self.parameter['method']
+
+        classification_result = textStyle.get_fontFamily()
+
+        if classification_result == None and method != 'COCR' :
+            
+            result = self.froc.classify(image)
+            classification_result = ''
+
+            for typegroup in self.froc.classMap.cl2id:
+                score = result[typegroup]
+                score = round(100 * score)
                 if score <= 0:
                     continue
-                if output != '':
-                    output += ', '
-                output += '%s:%d' % (typegroup, score)
-            LOG.debug('Detected %s on "%s"', output, segment.id)
-            textStyle = segment.get_TextStyle()
-            if not textStyle:
-                textStyle = TextStyleType()
-                segment.set_TextStyle(textStyle)
-            textStyle.set_fontFamily(output)
+                if classification_result != '':
+                    classification_result += ', '
+                classification_result += '%s:%d' % (typegroup, score)
+
+            textStyle.set_fontFamily(classification_result)
+        
+        
+        if method == 'COCR' :
+            fast_cocr = self.parameter['fast_cocr']
+            transcription = self.froc.run(image, 
+                                          method=method, 
+                                          fast_cocr=fast_cocr)
+        elif method == 'SelOCR' :
+            transcription = self.froc.run(image, 
+                                          method=method, 
+                                          classification_result=classification_result)
+        else :
+            fast_cocr = self.parameter['fast_cocr']
+            adaptive_treshold = self.parameter['adaptive_treshold']
+            transcription = self.froc.run(image, 
+                                          method=method, 
+                                          classification_result=classification_result, 
+                                          fast_cocr=fast_cocr, 
+                                          adaptive_treshold=adaptive_treshold)
+        segment.set_TextEquiv([TextEquivType(Unicode=transcription)])
+
 
     def process(self):
         """Classify historic script in pages and annotate as font style.
@@ -120,21 +119,12 @@ class TypegroupsClassifierProcessor(Processor):
                 # transform random augmentation)
                 # maybe even: dewarped,deskewed ?
                 feature_filter='binarized,normalized,grayscale_normalized,despeckled')
-            # todo: use image_info.resolution
-            if level == 'page':
-                self._process_segment(page, page_image)
-            elif level == 'region':
-                for region in page.get_AllRegions(classes=['Text']):
-                    region_image, region_coords = self.workspace.image_from_segment(
-                        region, page_image, page_coords,
-                        feature_filter='binarized,normalized,grayscale_normalized,despeckled')
-                    self._process_segment(region, region_image)
-            else :
-                for line in page.get_AllTextLines():
-                    line_image, line_coords = self.workspace.image_from_segment(
-                        line, page_image, page_coords,
-                        feature_filter='binarized,normalized,grayscale_normalized,despeckled')
-                    self._process_segment(line, line_image)
+
+            for line in page.get_AllTextLines():
+                line_image, line_coords = self.workspace.image_from_segment(
+                    line, page_image, page_coords,
+                    feature_filter='binarized,normalized,grayscale_normalized,despeckled')
+                self._process_segment(line, line_image)
 
             file_id = make_file_id(input_file, self.output_file_grp)
             pcgts.set_pcGtsId(file_id)
