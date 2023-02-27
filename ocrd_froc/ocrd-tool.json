@@ -1,0 +1,43 @@
+{
+  "version": "0.4.0",
+  "git_url": "https://github.com/MegaloPat/ocrd_froc",
+  "tools": {
+    "ocrd-froc": {
+      "executable": "ocrd-froc",
+      "description": "",
+      "categories": [
+        ""
+      ],
+      "steps": [
+        ""
+      ],
+      "input_file_grp": ["OCR-D-IMG"],
+      "output_file_grp": ["OCR-D-IMG-TEXT"],
+      "parameters": {
+        "method": {
+          "method": "The method to use for text recognition",
+          "type": "string",
+          "enum": ["SelOCR", "COCR", "adaptive"],
+          "default": "adaptive"
+        },
+        "network": {
+          "description": "The file name of the neural network to use, including sufficient path information",
+          "type": "string",
+          "required": false
+        },
+        "fast_cocr": {
+          "description": "Whether to use optimization steps on the COCR strategy",
+          "type": "boolean",
+          "default": true
+        },
+        "adaptive_treshold": {
+          "description": "Treshold of certitude needed to use SelOCR when using the adaptive strategy",
+          "type": "number",
+          "format": "integer",
+          "default": 95
+        }
+      }
+    }
+  }
+}
+

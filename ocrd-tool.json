@@ -14,7 +14,7 @@
       "input_file_grp": ["OCR-D-IMG"],
       "output_file_grp": ["OCR-D-IMG-TEXT"],
       "parameters": {
-        "level": {
+        "method": {
           "method": "The method to use for text recognition",
           "type": "string",
           "enum": ["SelOCR", "COCR", "adaptive"],
@@ -25,12 +25,12 @@
           "type": "string",
           "required": false
         },
-        "fast_ocr": {
+        "fast_cocr": {
           "description": "Whether to use optimization steps on the COCR strategy",
           "type": "boolean",
           "default": true
         },
-        "adaptive-treshold": {
+        "adaptive_treshold": {
           "description": "Treshold of certitude needed to use SelOCR when using the adaptive strategy",
           "type": "number",
           "format": "integer",

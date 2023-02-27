@@ -25,10 +25,9 @@ setup(
     package_data={
         '': ['*.json', '*.tgc'],
     },
-    #entry_points={
-    #    'console_scripts': [
-    #        'typegroups-classifier=ocrd_typegroups_classifier.cli.simple:cli',
-    #        'ocrd-typegroups-classifier=ocrd_typegroups_classifier.cli.ocrd_cli:cli',
-    #    ]
-    #},
+    entry_points={
+        'console_scripts': [
+            'ocrd-froc=ocrd_froc.cli.ocrd_cli:cli',
+        ]
+    },
 )

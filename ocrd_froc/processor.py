@@ -20,7 +20,7 @@ from ocrd_models.ocrd_page import (
 from json import loads
 from pkg_resources import resource_string
 from ocrd_modelfactory import page_from_file
-from froc import Froc
+from ocrd_froc.froc import Froc
 
 OCRD_TOOL = loads(resource_string(__name__, 'ocrd-tool.json'))
 
@@ -52,6 +52,7 @@ class FROCProcessor(Processor):
         method = self.parameter['method']
 
         classification_result = textStyle.get_fontFamily()
+        result = {}
 
         if classification_result == None and method != 'COCR' :
             
@@ -78,13 +79,13 @@ class FROCProcessor(Processor):
         elif method == 'SelOCR' :
             transcription = self.froc.run(image, 
                                           method=method, 
-                                          classification_result=classification_result)
+                                          classification_result=result)
         else :
             fast_cocr = self.parameter['fast_cocr']
             adaptive_treshold = self.parameter['adaptive_treshold']
             transcription = self.froc.run(image, 
                                           method=method, 
-                                          classification_result=classification_result, 
+                                          classification_result=result, 
                                           fast_cocr=fast_cocr, 
                                           adaptive_treshold=adaptive_treshold)
         segment.set_TextEquiv([TextEquivType(Unicode=transcription)])
@@ -108,7 +109,6 @@ class FROCProcessor(Processor):
         LOG = getLogger('ocrd_typegroups_classifier')
         assert_file_grp_cardinality(self.input_file_grp, 1)
         assert_file_grp_cardinality(self.output_file_grp, 1)
-        level = self.parameter['level']
         for n, input_file in enumerate(self.input_files):
             page_id = input_file.pageId or input_file.ID
             LOG.info('Processing: %d / %s', n, page_id)

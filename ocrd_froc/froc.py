@@ -5,8 +5,8 @@ from torchvision import transforms
 from PIL import Image
 
 import torch.nn.functional as F
-from converter import Converter
-from classmap import ClassMap
+from ocrd_froc.converter import Converter
+from ocrd_froc.classmap import ClassMap
 
 class Froc:
     """ Class wrapping type group information and a classifier.
@@ -80,7 +80,8 @@ class Froc:
         res = pickle.load(input)
         # If trained with CUDA and loaded on a device without CUDA
         res.dev = torch.device(res.dev if torch.cuda.is_available() else "cpu")
-        res.network.to(res.dev)
+        res.selocr.to(res.dev)
+        res.cocr.to(res.dev)
         return res
         
     def save(self, output):
@@ -102,10 +103,12 @@ class Froc:
             raise Exception('save() requires a string or a file')
         # Moving the network to the cpu so that it can be reloaded on
         # machines which do not have CUDA available.
-        self.network.to("cpu")
+        self.selocr.to("cpu")
+        self.cocr.to("cpu")
         pickle.dump(self, output)
-        self.network.to(self.dev)
-
+        self.selocr.to(self.dev)
+        self.cocr.to(self.dev)
+        
     def run(self, pil_image, **kwargs):
 
         method = kwargs.get('method', 'adaptive')
@@ -123,7 +126,8 @@ class Froc:
             classification_result = kwargs['classification_result']
             res = self.run_adaptive(tns, classification_result, fast_cocr, adaptive_treshold)
 
-        base_width = pil_image.shape[0]
+        base_width = [tns.shape[2]]
+
         res = self.converter.decode(res, base_width)
         return res
 
@@ -137,7 +141,7 @@ class Froc:
             pil_image = pil_image.resize((width, 32), Image.Resampling.LANCZOS)
 
         tns = trans(pil_image).to(self.dev).unsqueeze(0)
-        out = self.network(tns)
+        out = self.classifier(tns)
         score = out.mean(axis=1)[0]
         score = F.softmax(score, dim=0)
 
@@ -171,6 +175,7 @@ class Froc:
         max_cl = max(classification_result, key=classification_result.get)
         max_idx = self.classMap.cl2id[max_cl]
 
+        tns = torch.unsqueeze(tns, 0)
         with torch.no_grad() :
             self.selocr.eval()
             
@@ -181,6 +186,7 @@ class Froc:
             return res
 
     def run_cocr(self, tns, fast_cocr) :
+        tns = torch.unsqueeze(tns, 0)
 
         with torch.no_grad():
             self.cocr.eval()
@@ -193,7 +199,7 @@ class Froc:
         
 
     def run_adaptive(self, tns, classification_result, fast_cocr, adaptive_treshold) :
-        if max(classification_result.values() > adaptive_treshold) :
+        if max(classification_result.values()) > adaptive_treshold / 100 :
             return self.run_selocr(tns, classification_result)
         else:
             return self.run_cocr(tns, fast_cocr)
