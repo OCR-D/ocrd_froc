@@ -1,5 +1,5 @@
 """
-Wrap TypegroupsClassifier as an ocrd.Processor
+Wrap FROC as an ocrd.Processor
 """
 import os
 from pkg_resources import resource_filename
@@ -17,9 +17,12 @@ from ocrd_models.ocrd_page import (
     TextStyleType,
     TextEquivType,
 )
+from json import loads
+from pkg_resources import resource_string
 from ocrd_modelfactory import page_from_file
 from froc import Froc
-from .constants import OCRD_TOOL
+
+OCRD_TOOL = loads(resource_string(__name__, 'ocrd-tool.json'))
 
 class FROCProcessor(Processor):
 
@@ -88,17 +91,17 @@ class FROCProcessor(Processor):
 
 
     def process(self):
-        """Classify historic script in pages and annotate as font style.
+        """Recognize text in historic documents, can also classify font.
 
         Open and deserialize PAGE input files and their respective images
-        down to the hierarchy ``level``.
+        down to their text lines.
 
-        Then for each segment, retrieve the raw image and feed it to the font
-        classifier. 
+        Then for each line, retrieve the raw image and feed it to the font
+        classifier (optionally) and the OCR. 
 
-        Post-process detections by filtering classes and thresholding scores.
-        Annotate the good predictions by name and score as a comma-separated
+        Annotate font predictions by name and score as a comma-separated
         list under ``./TextStyle/@fontFamily``, if any.
+        Annotate the text as a string under ``./TextEquivType``.
 
         Produce a new PAGE output file by serialising the resulting hierarchy.
         """
