@@ -26,22 +26,6 @@ class Backbone(torch.nn.Module):
         x = self.max_pool2(x)
         return x
 
-class Backbone2L(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.act = torch.nn.ReLU()
-        self.max_pool = torch.nn.MaxPool2d(kernel_size=(2,2), stride=(2,1))
-        self.conv1 = torch.nn.Conv2d(1,  64,  (3, 3), stride=(3,2), padding=(2,2))
-        self.conv2 = torch.nn.Conv2d(64, 128, (3, 3), stride=(3,2), padding=(2,2))
-        self.output_dim = 128
-
-    def forward(self, x):
-        x = self.act(self.conv1(x))
-        x = self.max_pool(x)
-        x = self.act(self.conv2(x))
-        x = self.max_pool(x)
-        return x
-
 class NoDimRedBackbone(torch.nn.Module):
     def __init__(self, output_dim=32):
         super().__init__()
@@ -62,7 +46,6 @@ class NoDimRedBackbone(torch.nn.Module):
         return x.mean(axis=2)
 
 class OCROnly(torch.nn.Module):
-    # Here I changed lstm_layers from 3 to 1 for the bug hunt, and Backbone to Backbone2L
     def __init__(self, nb_classes, feature_dim=200, backbone=Backbone, lstm_layers=3):
         super().__init__()
         self.backbone = backbone()
@@ -114,7 +97,6 @@ class OCROnly(torch.nn.Module):
     def forward(self, x):
         x = self.backbone(x)
         x = self.act(x)
-        # ~ x, _ = torch.max(x, axis=2)
         x = torch.mean(x, axis=2)
         x = x.permute(2, 0, 1)
         x = self.embed(x)
@@ -164,41 +146,6 @@ class SelectiveOCR(torch.nn.Module):
             model_idx = n
         model_idx = model_idx if model_idx in self.models else 0
         return self.models[model_idx](x)
-
-class SplitOCR(torch.nn.Module):
-    def __init__(self, classifier, models):
-        super().__init__()
-        self.classifier = classifier
-        self.models     = models
-    
-    def forward(self, x, labels=None):
-        if x.shape[0]!=1:
-            raise Exception('SplitOCR cannot work on batches, sorry')
-        self.classifier.eval()
-        for m in self.models:
-            self.models[m].eval()
-        if labels is None:
-            scores = self.classifier(x)[0, :, :]
-            n = torch.argmax(scores, axis=1)
-        else:
-            n = labels
-        seq = []
-        a = 0
-        while a<n.shape[0]-1:
-            for b in range(a+1, n.shape[0]):
-                if n[b]!=n[a]:
-                    break
-            seq.append(((a,b), n[a].item()))
-            a = b
-        res = []
-        for s, n in seq:
-            if s[1]-s[0]<2:
-                continue
-            n = n if n in self.models else 0
-            r = self.models[n](x[:, :, :, s[0]:s[1]])
-            res.append(r)
-        return torch.concat(res, axis=0)
-
 class COCR(torch.nn.Module):
     def __init__(self, classifier, models):
         super().__init__()
@@ -227,41 +174,4 @@ class COCR(torch.nn.Module):
                 continue
             y = self.models[n](x)
             res += y * s
-        return res
-
-# Same CNN/embedding, different RNN
-class COCR2(torch.nn.Module):
-    def __init__(self, classifier, generic_model, nb_models=13):
-        super().__init__()
-        self.classifier = classifier
-        self.generic = generic_model
-        self.cnn = generic_model.backbone
-        self.embed = generic_model.embed
-        self.rnn = {
-            x: copy.deepcopy(generic_model.rnn) for x in range(nb_models)
-        }
-        self.head = {
-            x: copy.deepcopy(generic_model.head) for x in range(nb_models)
-        }
-        for n in self.rnn:
-            self.rnn[n].load_state_dict(self.rnn[n].state_dict()) # not sure, maybe needed
-            self.rnn[n].flatten_parameters()
-        
-    
-    def convert_widths(self, w, max_width):
-        return self.generic.convert_widths(w, max_width)
-    
-    def forward(self, x):
-        scores = F.softmax(self.classifier(x), dim=2)
-        x = self.cnn(x)
-        x = self.generic.act(x)
-        x, _ = torch.max(x, axis=2)
-        x = x.permute(2, 0, 1)
-        x = self.embed(x)
-        
-        res = 0
-        for n in self.rnn:
-            y, _ = self.rnn[n](x)
-            y = self.head[n](y)
-            res += y * scores[:, :, n].unsqueeze(-1)
         return res
