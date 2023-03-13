@@ -10,6 +10,6 @@ from ..processor import FROCProcessor
 @ocrd_cli_options
 def cli(*args, **kwargs):
     """
-    Classify typegroups
+    Classify typegroups and get transcriptions
     """
     return ocrd_cli_wrap_processor(FROCProcessor, *args, **kwargs)

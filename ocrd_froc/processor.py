@@ -110,7 +110,7 @@ class FROCProcessor(Processor):
 
         Finally, produce a new PAGE output file by serialising the resulting hierarchy.
         """
-        LOG = getLogger('ocrd_typegroups_classifier')
+        LOG = getLogger('ocrd_froc')
         assert_file_grp_cardinality(self.input_file_grp, 1)
         assert_file_grp_cardinality(self.output_file_grp, 1)
         for n, input_file in enumerate(self.input_files):
