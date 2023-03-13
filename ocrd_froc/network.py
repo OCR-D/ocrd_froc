@@ -158,7 +158,7 @@ class SelectiveOCR(torch.nn.Module):
     def forward(self, x, model_idx=None):
         if x.shape[0]!=1:
             raise Exception('SelectiveOCR cannot work on batches, sorry')
-        if not model_idx :
+        if model_idx == None:
             scores = self.classifier(x).sum(axis=1)#.view(-1,13).mean(axis=1)
             n = torch.argmax(scores[0,:]).item()
             model_idx = n

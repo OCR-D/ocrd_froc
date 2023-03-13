@@ -206,14 +206,3 @@ class Froc:
             return self.run_selocr(tns, classification_result)
         else:
             return self.run_cocr(tns, fast_cocr)
-
-
-
-
-
-
-
-        
-
-
-    

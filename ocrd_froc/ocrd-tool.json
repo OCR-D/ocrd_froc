@@ -36,6 +36,15 @@
           "type": "number",
           "format": "integer",
           "default": 95
+        },
+        "font_class_priors": {
+          "description": "List of font classes which are known to be present on the data when using the adaptive/SelOCR strategies. When this option is specified, every font classes not included will be ignored. If 'other' is included in the list, font classification will not be outputted and a generic model will be used for transcriptions.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["antiqua", "bastarda", "fraktur", "textura", "schwabacher", "greek", "italic", "hebrew", "gotico-antiqua", "manuscript", "rotunda", "other"]
+          },
+          "default": []
         }
       }
     }

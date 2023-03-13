@@ -59,6 +59,26 @@ class FROCProcessor(Processor):
             result = self.froc.classify(image)
             classification_result = ''
 
+            
+            font_class_priors = self.parameter['font_class_priors']
+            output_font = True
+
+            if font_class_priors :
+                if 'other' in font_class_priors :
+                    for typegroup in self.froc.classMap.cl2id :
+                        result[typegroup] = 0
+                    result['all'] = 1
+                    output_font = False
+                else :
+                    result_sum = 0
+                    for typegroup in self.froc.classMap.cl2id :
+                        if typegroup not in font_class_priors :
+                            result[typegroup] = 0
+                        else:
+                            result_sum += result[typegroup]
+                    for typegroup in self.froc.classMap.cl2id :
+                        result[typegroup] /= result_sum
+
             for typegroup in self.froc.classMap.cl2id:
                 score = result[typegroup]
                 score = round(100 * score)
@@ -67,8 +87,9 @@ class FROCProcessor(Processor):
                 if classification_result != '':
                     classification_result += ', '
                 classification_result += '%s:%d' % (typegroup, score)
-
-            textStyle.set_fontFamily(classification_result)
+            
+            if output_font :
+                textStyle.set_fontFamily(classification_result)
         
         
         if method == 'COCR' :
