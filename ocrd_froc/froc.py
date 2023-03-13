@@ -126,9 +126,12 @@ class Froc:
             classification_result = kwargs['classification_result']
             res = self.run_adaptive(tns, classification_result, fast_cocr, adaptive_treshold)
 
+        # constrain to image width, expand to batch format (batch size 1)
         base_width = [tns.shape[2]]
 
         res = self.converter.decode(res, base_width)
+        # squeeze batch dimension
+        res = res[0]
         return res
 
 

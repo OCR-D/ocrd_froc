@@ -92,19 +92,23 @@ class FROCProcessor(Processor):
 
 
     def process(self):
-        """Recognize text in historic documents, can also classify font.
+        """Perform font classification and text recognition (in one step) on historic documents.
 
-        Open and deserialize PAGE input files and their respective images
-        down to their text lines.
+        Open and deserialize PAGE input files and their respective images,
+        iterating over the element hierarchy down to the text line level.
 
         Then for each line, retrieve the raw image and feed it to the font
-        classifier (optionally) and the OCR. 
+        classifier (optionally) and the OCR.
 
         Annotate font predictions by name and score as a comma-separated
         list under ``./TextStyle/@fontFamily``, if any.
-        Annotate the text as a string under ``./TextEquivType``.
 
-        Produce a new PAGE output file by serialising the resulting hierarchy.
+        Annotate the text prediction as a string under ``./TextEquiv``.
+
+        If ``method`` is `adaptive`, then use `SelOCR` if font classification is confident
+        enough, otherwise use `COCR`.
+
+        Finally, produce a new PAGE output file by serialising the resulting hierarchy.
         """
         LOG = getLogger('ocrd_typegroups_classifier')
         assert_file_grp_cardinality(self.input_file_grp, 1)
