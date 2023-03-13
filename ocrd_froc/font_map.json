@@ -1,0 +1,15 @@
+{
+    "antiqua": 1,
+    "bastarda": 2,
+    "fraktur": 3,
+    "textura": 4,
+    "schwabacher": 5,
+    "greek": 6,
+    "italic": 7,
+    "hebrew": 8,
+    "gotico-antiqua": 9,
+    "manuscript": 10,
+    "rotunda": 11,
+    "no class": 12,
+    "ignore": 12
+}
