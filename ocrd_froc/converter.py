@@ -44,28 +44,39 @@ class Converter(object):
                 res.append(self.raw(encodings[i]))
             return res
         if n==3:
-            return self.raw(torch.argmax(out, 2))
+            return self.raw(torch.argmax(encodings, 2))
     
-    def decode(self, encodings, base_width=None):
+    def decode(self, encodings, scores, base_width=None):
         n = len(encodings.shape)
         if n>3:
             raise Exception('Wrong encoding shape, must be 1D, 2D tensor (batch, length), or 3d (batch, length, class scores). You gave:'+str(encodings.shape))
         if n==1:
             l = []
             prev = None
+            
+            score_max = 0
+            scores_sum = 0
             for i in range(min(encodings.shape[0], base_width)):
                 cur = encodings[i]
                 if cur!=prev:
                     l.append(self.reverse[cur.item()])
+                    if prev is not None:
+                        scores_sum += score_max
+                        score_max=0
+                score_max = scores[i].item() if scores[i] > score_max else score_max
                 prev = cur
-            return ''.join(l).replace('/PAD/', '')
+
+            return ''.join(l).replace('/PAD/', ''), scores_sum / len(l)
         if n==2:
             res = []
+            res_scores = []
             for i in range(encodings.shape[0]):
                 if base_width is not None:
-                    res.append(self.decode(encodings[i], base_width[i]))
+                    decoded, score = self.decode(encodings[i], scores[i], base_width[i])
+                    res.append(decoded)
+                    res_scores.append(score)
                 else:
-                    res.append(self.decode(encodings[i], encodings[i].shape[0]))
-            return res
-        if n==3:
-            return self.decode(torch.argmax(out, 2), base_width)
+                    decoded, score = self.decode(encodings[i], scores[i], encodings[i].shape[0])
+                    res.append(decoded)
+                    res_scores.append(score)
+            return res, res_scores

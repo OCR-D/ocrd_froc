@@ -119,20 +119,25 @@ class Froc:
 
         if method == 'SelOCR' :
             classification_result = kwargs['classification_result']
-            res = self.run_selocr(tns, classification_result)
+            out = self.run_selocr(tns, classification_result)
         elif method == 'COCR' :
-            res = self.run_cocr(tns, fast_cocr)
+            out = self.run_cocr(tns, fast_cocr)
         else :
             classification_result = kwargs['classification_result']
-            res = self.run_adaptive(tns, classification_result, fast_cocr, adaptive_treshold)
+            out = self.run_adaptive(tns, classification_result, fast_cocr, adaptive_treshold)
 
         # constrain to image width, expand to batch format (batch size 1)
         base_width = [tns.shape[2]]
+        
+        out = torch.softmax(out, 2)
+        scores, res = torch.max(out[:, :, :], 2)
 
-        res = self.converter.decode(res, base_width)
+        res, score = self.converter.decode(res, scores, base_width=base_width)
+        
         # squeeze batch dimension
         res = res[0]
-        return res
+        score = score[0]
+        return res, score
 
 
     def classify(self, pil_image) :
@@ -184,9 +189,8 @@ class Froc:
             
             out = self.selocr(tns, max_idx)
             out = out.transpose(0,1)
-            res = torch.argmax(out[:, :, :], 2)
 
-            return res
+            return out
 
     def run_cocr(self, tns, fast_cocr) :
         tns = torch.unsqueeze(tns, 0)
@@ -196,9 +200,8 @@ class Froc:
             
             out = self.cocr(tns, fast_cocr)
             out = out.transpose(0,1)
-            res = torch.argmax(out[:, :, :], 2)
             
-            return res
+            return out
         
 
     def run_adaptive(self, tns, classification_result, fast_cocr, adaptive_treshold) :

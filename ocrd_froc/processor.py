@@ -94,22 +94,22 @@ class FROCProcessor(Processor):
         
         if method == 'COCR' :
             fast_cocr = self.parameter['fast_cocr']
-            transcription = self.froc.run(image, 
+            transcription, score = self.froc.run(image, 
                                           method=method, 
                                           fast_cocr=fast_cocr)
         elif method == 'SelOCR' :
-            transcription = self.froc.run(image, 
+            transcription, score = self.froc.run(image, 
                                           method=method, 
                                           classification_result=result)
         else :
             fast_cocr = self.parameter['fast_cocr']
             adaptive_treshold = self.parameter['adaptive_treshold']
-            transcription = self.froc.run(image, 
+            transcription, score = self.froc.run(image, 
                                           method=method, 
                                           classification_result=result, 
                                           fast_cocr=fast_cocr, 
                                           adaptive_treshold=adaptive_treshold)
-        segment.set_TextEquiv([TextEquivType(Unicode=transcription)])
+        segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
 
 
     def process(self):
