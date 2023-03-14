@@ -1,5 +1,6 @@
 import re
 import torch
+import numpy as np
 
 wtf_pattern = re.compile(r'(.[\u02F3\u1D53\u0300\u2013\u032E\u208D\u203F\u0311\u0323\u035E\u031C\u02FC\u030C\u02F9\u0328\u032D\u02F4\u032F\u0330\u035C\u0302\u0327\u0357\u0308\u0351\u0304\u02F2\u0352\u0355\u032C\u030B\u0339\u0301\u02F1\u0303\u0306\u030A\u0325\u0307\u0354\u02F0\u0060\u030d\u0364\u0303]*)', re.UNICODE | re.IGNORECASE)
 def split(s):
@@ -48,8 +49,8 @@ class Converter(object):
     
     def decode(self, encodings, scores, base_width=None):
         n = len(encodings.shape)
-        if n>3:
-            raise Exception('Wrong encoding shape, must be 1D, 2D tensor (batch, length), or 3d (batch, length, class scores). You gave:'+str(encodings.shape))
+        if n>2:
+            raise Exception('Wrong encoding shape, must be 1D or 2D tensor (batch, length). You gave:'+str(encodings.shape))
         if n==1:
             l = []
             prev = None
