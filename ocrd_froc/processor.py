@@ -76,8 +76,12 @@ class FROCProcessor(Processor):
                             result[typegroup] = 0
                         else:
                             result_sum += result[typegroup]
-                    for typegroup in self.froc.classMap.cl2id :
-                        result[typegroup] /= result_sum
+                    if result_sum == 0 :
+                        result['all'] = 1
+                        output_font = False
+                    else:
+                        for typegroup in self.froc.classMap.cl2id :
+                            result[typegroup] /= result_sum
 
             for typegroup in self.froc.classMap.cl2id:
                 score = result[typegroup]
