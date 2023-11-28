@@ -38,7 +38,7 @@ class FROCProcessor(Processor):
 
         if 'network' not in self.parameter:
             self.parameter['network'] = resource_filename(__name__, 'models/default.froc')
-        
+
         network_file = self.resolve_resource(self.parameter['network'])
         self.froc = Froc.load(network_file)
 
@@ -46,41 +46,41 @@ class FROCProcessor(Processor):
         textStyle = segment.get_TextStyle()
         if not textStyle:
             textStyle = TextStyleType()
-            segment.set_TextStyle(textStyle) 
-        
+            segment.set_TextStyle(textStyle)
+
 
         method = self.parameter['method']
 
         classification_result = textStyle.get_fontFamily()
         result = {}
 
-        if classification_result == None and method != 'COCR' :
-            
+        if classification_result == None and method != 'COCR':
+
             result = self.froc.classify(image)
             classification_result = ''
 
-            
+
             font_class_priors = self.parameter['font_class_priors']
             output_font = True
 
-            if font_class_priors :
-                if 'other' in font_class_priors :
-                    for typegroup in self.froc.classMap.cl2id :
+            if font_class_priors:
+                if 'other' in font_class_priors:
+                    for typegroup in self.froc.classMap.cl2id:
                         result[typegroup] = 0
                     result['all'] = 1
                     output_font = False
-                else :
+                else:
                     result_sum = 0
-                    for typegroup in self.froc.classMap.cl2id :
-                        if typegroup not in font_class_priors :
+                    for typegroup in self.froc.classMap.cl2id:
+                        if typegroup not in font_class_priors:
                             result[typegroup] = 0
                         else:
                             result_sum += result[typegroup]
-                    if result_sum == 0 :
+                    if result_sum == 0:
                         result['all'] = 1
                         output_font = False
                     else:
-                        for typegroup in self.froc.classMap.cl2id :
+                        for typegroup in self.froc.classMap.cl2id:
                             result[typegroup] /= result_sum
 
             for typegroup in self.froc.classMap.cl2id:
@@ -91,27 +91,27 @@ class FROCProcessor(Processor):
                 if classification_result != '':
                     classification_result += ', '
                 classification_result += '%s:%d' % (typegroup, score)
-            
-            if output_font :
+
+            if output_font:
                 textStyle.set_fontFamily(classification_result)
-        
-        
-        if method == 'COCR' :
+
+
+        if method == 'COCR':
             fast_cocr = self.parameter['fast_cocr']
-            transcription, score = self.froc.run(image, 
-                                          method=method, 
+            transcription, score = self.froc.run(image,
+                                          method=method,
                                           fast_cocr=fast_cocr)
-        elif method == 'SelOCR' :
-            transcription, score = self.froc.run(image, 
-                                          method=method, 
+        elif method == 'SelOCR':
+            transcription, score = self.froc.run(image,
+                                          method=method,
                                           classification_result=result)
-        else :
+        else:
             fast_cocr = self.parameter['fast_cocr']
             adaptive_treshold = self.parameter['adaptive_treshold']
-            transcription, score = self.froc.run(image, 
-                                          method=method, 
-                                          classification_result=result, 
-                                          fast_cocr=fast_cocr, 
+            transcription, score = self.froc.run(image,
+                                          method=method,
+                                          classification_result=result,
+                                          fast_cocr=fast_cocr,
                                           adaptive_treshold=adaptive_treshold)
         segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
 

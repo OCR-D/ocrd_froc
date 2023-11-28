@@ -10,10 +10,10 @@ from ocrd_froc.classmap import ClassMap
 
 class Froc:
     """ Class wrapping type group information and a classifier.
-    
+
         Attributes
         ----------
-        
+
         classMap: ClassMap
             Maps class names to indices corresponding to what the network
             outputs.
@@ -21,15 +21,15 @@ class Froc:
             Classifier
         dev: str
             Device on which the data must be processed
-    
+
     """
-    
+
     def __init__(self, groups, charmap, selocr, cocr, device=None):
         """ Constructor of the class.
-        
+
             Parameters
             ----------
-            
+
             groups: map string to int
                 Maps names to IDs with regard to the network outputs;
                 note that several names can point to the same ID, but
@@ -39,7 +39,7 @@ class Froc:
             device: str
                 Device on which the data has to be processed; if not set,
                 then either the cpu or cuda:0 will be used.
-        
+
         """
         self.converter = Converter(charmap)
         self.classMap = ClassMap(groups)
@@ -61,15 +61,15 @@ class Froc:
     @classmethod
     def load(cls, input):
         """ Loads a type groups classifier from a file
-            
+
             Parameters
             ----------
             input: string or file
                 File or path to the file from which the instance has to
                 be loaded.
-        
+
         """
-        
+
         if type(input) is str:
             f = open(input, 'rb')
             res = cls.load(f)
@@ -83,17 +83,17 @@ class Froc:
         res.selocr.to(res.dev)
         res.cocr.to(res.dev)
         return res
-        
+
     def save(self, output):
         """ Stores the instance to a file
-        
+
             Parameters
             ----------
                 output: string or file
                     File or path to the file to which the instane has to
                     be stored.
         """
-        
+
         if type(output) is str:
             f = open(output, 'wb')
             self.save(f)
@@ -108,7 +108,7 @@ class Froc:
         pickle.dump(self, output)
         self.selocr.to(self.dev)
         self.cocr.to(self.dev)
-        
+
     def run(self, pil_image, **kwargs):
 
         method = kwargs.get('method', 'adaptive')
@@ -117,32 +117,32 @@ class Froc:
 
         tns = self.preprocess_image(pil_image)
 
-        if method == 'SelOCR' :
+        if method == 'SelOCR':
             classification_result = kwargs['classification_result']
             out = self.run_selocr(tns, classification_result)
-        elif method == 'COCR' :
+        elif method == 'COCR':
             out = self.run_cocr(tns, fast_cocr)
-        else :
+        else:
             classification_result = kwargs['classification_result']
             out = self.run_adaptive(tns, classification_result, fast_cocr, adaptive_treshold)
 
         # constrain to image width, expand to batch format (batch size 1)
         base_width = [tns.shape[2]]
-        
+
         out = torch.softmax(out, 2)
         scores, res = torch.max(out[:, :, :], 2)
 
         res, score = self.converter.decode(res, scores, base_width=base_width)
-        
+
         # squeeze batch dimension
         res = res[0]
         score = score[0]
         return res, score
 
 
-    def classify(self, pil_image) :
+    def classify(self, pil_image):
         trans = transforms.Compose([transforms.Grayscale(), transforms.ToTensor()])
- 
+
         if pil_image.size[1]!=32:
             ratio = 32 / pil_image.size[1]
             width = int(pil_image.size[0] * ratio)
@@ -160,9 +160,9 @@ class Froc:
                 continue
             res[cl] = score[cid].item()
         return res
-    
 
-    def preprocess_image(self, pil_image) :
+
+    def preprocess_image(self, pil_image):
         if pil_image.size[1]!=32:
             ratio = 32 / pil_image.size[1]
             width = int(pil_image.size[0] * ratio)
@@ -176,36 +176,36 @@ class Froc:
 
         tns = trans(pil_image)
         tns = tns.to(self.dev)
-        
+
         return tns
 
-    def run_selocr(self, tns, classification_result) :
+    def run_selocr(self, tns, classification_result):
         max_cl = max(classification_result, key=classification_result.get)
         max_idx = self.classMap.cl2id[max_cl]
 
         tns = torch.unsqueeze(tns, 0)
-        with torch.no_grad() :
+        with torch.no_grad():
             self.selocr.eval()
-            
+
             out = self.selocr(tns, max_idx)
             out = out.transpose(0,1)
 
             return out
 
-    def run_cocr(self, tns, fast_cocr) :
+    def run_cocr(self, tns, fast_cocr):
         tns = torch.unsqueeze(tns, 0)
 
         with torch.no_grad():
             self.cocr.eval()
-            
+
             out = self.cocr(tns, fast_cocr)
             out = out.transpose(0,1)
-            
-            return out
-        
 
-    def run_adaptive(self, tns, classification_result, fast_cocr, adaptive_treshold) :
-        if max(classification_result.values()) > adaptive_treshold / 100 :
+            return out
+
+
+    def run_adaptive(self, tns, classification_result, fast_cocr, adaptive_treshold):
+        if max(classification_result.values()) > adaptive_treshold / 100:
             return self.run_selocr(tns, classification_result)
         else:
             return self.run_cocr(tns, fast_cocr)

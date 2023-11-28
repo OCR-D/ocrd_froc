@@ -12,7 +12,7 @@ class Converter(object):
         self.letters = {l:(n+1) for n, l in enumerate(letters)}
         self.n_classes = len(letters)+1
         self.reverse = {self.letters[l]:l for l in self.letters} | {0: ''}
-    
+
     def encode(self, text, pad=True):
         if isinstance(text, str):
             s = split(text)
@@ -29,7 +29,7 @@ class Converter(object):
                 while len(e)<mx:
                     e.append(0)
         return torch.Tensor(encodings).int(), torch.Tensor(lengths).int()
-    
+
     def raw(self, encodings):
         n = len(encodings.shape)
         if n>3:
@@ -46,7 +46,7 @@ class Converter(object):
             return res
         if n==3:
             return self.raw(torch.argmax(encodings, 2))
-    
+
     def decode(self, encodings, scores, base_width=None):
         n = len(encodings.shape)
         if n>2:
@@ -54,7 +54,7 @@ class Converter(object):
         if n==1:
             l = []
             prev = None
-            
+
             score_max = 0
             scores_sum = 0
             for i in range(min(encodings.shape[0], base_width)):

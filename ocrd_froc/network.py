@@ -12,7 +12,7 @@ def load_network(folder):
 
     :param folder: folder containing the files
     :return: a network which can be used for OCR
-    """ 
+    """
     p = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
     if p['type']=='OCROnly':
         return OCROnly.load_from_folder(folder)
@@ -28,15 +28,15 @@ def load_network(folder):
 
 class Backbone(torch.nn.Module):
     """
-    CNN used in all of our OCR pipelines. 
-    """ 
+    CNN used in all of our OCR pipelines.
+    """
     def __init__(self, output_dim=64):
         """
         Constructor
 
         :param output_dim: number of neurons in the output layer
         :return: instance of the class
-        """ 
+        """
         super().__init__()
         self.act = torch.nn.LeakyReLU()
         self.max_pool1 = torch.nn.MaxPool2d(kernel_size=(4,2))
@@ -53,7 +53,7 @@ class Backbone(torch.nn.Module):
 
         :param x: text line (batch)
         :return: descriptors (batch)
-        """ 
+        """
         x = torch.nn.functional.pad(x,(1,2,1,2))
         x = self.act(self.conv1(x))
         x = self.act(self.conv2(x))
@@ -73,7 +73,7 @@ class NoDimRedBackbone(torch.nn.Module):
 
         :param output_dim: number of neurons in the output layer
         :return: instance of the class
-        """ 
+        """
         super().__init__()
         self.act = torch.nn.LeakyReLU()
         self.max_pool2 = torch.nn.MaxPool2d(kernel_size=(3,1))
@@ -89,7 +89,7 @@ class NoDimRedBackbone(torch.nn.Module):
 
         :param x: text line (batch)
         :return: descriptors (batch)
-        """ 
+        """
         x = self.act(self.conv1(x))
         x = self.act(self.conv2(x))
         x = self.max_pool2(x)
@@ -103,39 +103,39 @@ class SimpleHead(torch.nn.Module):
         self.rnn = torch.nn.LSTM(input_dim, output_dim, 1, bidirectional=True)
         self.lin = torch.nn.Linear(2*output_dim, output_dim)
         self.params = {'type': 'SimpleHead', 'input_dim': input_dim, 'output_dim': output_dim}
-    
+
     def load_from_folder(folder):
         """
         Static method loading an instance from a folder
 
         :param folder: source folder
         :return: an instance of the class
-        """ 
+        """
         p = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
         net = SimpleHead(input_dim=p['input_dim'], output_dim=p['output_dim'])
         net.load(folder)
         return net
-    
+
     def load(self, folder):
         """
         Loads the models' weights from a folder. Note that the model has
         to be properly initialized first.
 
         :param folder: source folder
-        """ 
+        """
         self.load_state_dict(torch.load(os.path.join(folder, 'net.pth')))
         self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
-    
+
     def save(self, folder):
         """
         Saves the model to a folder. Creates this folder if needed.
 
         :param folder: destination folder
-        """ 
+        """
         os.makedirs(folder, exist_ok=True)
         torch.save(self.state_dict(), os.path.join(folder, 'net.pth'))
         json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
-    
+
     def forward(self, x):
         x, _ = self.rnn(x)
         x = self.lin(x)
@@ -156,7 +156,7 @@ class OCROnly(torch.nn.Module):
         :param backbone: class of the backbone
         :param lstm_layers: self-describing parameter
         :return: an instance of the class
-        """ 
+        """
         super().__init__()
         self.params = {'type': 'OCROnly', 'nb_classes': nb_classes, 'feature_dim': feature_dim, 'lstm_layers': lstm_layers}
         self.backbone = backbone()
@@ -166,45 +166,45 @@ class OCROnly(torch.nn.Module):
         self.act = torch.nn.ReLU()
         self.__length_map = {}
         self.__init_length_map()
-    
+
     def load_from_folder(folder):
         """
         Static method loading an instance from a folder
 
         :param folder: source folder
         :return: an instance of the class
-        """ 
+        """
         p = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
         net = OCROnly(nb_classes=p['nb_classes'], feature_dim=p['feature_dim'], lstm_layers=p['lstm_layers'])
         net.load(folder)
         return net
-    
+
     def save(self, folder):
         """
         Saves the model to a folder. Creates this folder if needed.
 
         :param folder: destination folder
-        """ 
+        """
         os.makedirs(folder, exist_ok=True)
         torch.save(self.backbone.state_dict(), os.path.join(folder, 'backbone.pth'))
         torch.save(self.embed.state_dict(), os.path.join(folder, 'embed.pth'))
         torch.save(self.rnn.state_dict(), os.path.join(folder, 'rnn.pth'))
         torch.save(self.head.state_dict(), os.path.join(folder, 'head.pth'))
         json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
-    
+
     def load(self, folder):
         """
         Loads the models' weights from a folder. Note that the model has
         to be properly initialized first.
 
         :param folder: source folder
-        """ 
+        """
         self.backbone.load_state_dict(torch.load(os.path.join(folder, 'backbone.pth')))
         self.embed.load_state_dict(torch.load(os.path.join(folder, 'embed.pth')))
         self.rnn.load_state_dict(torch.load(os.path.join(folder, 'rnn.pth')))
         self.head.load_state_dict(torch.load(os.path.join(folder, 'head.pth')))
         self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
-    
+
     def get_optimizers(self, folder=None):
         """
         Returns an array containing one optimizer - if folder is not none,
@@ -212,22 +212,22 @@ class OCROnly(torch.nn.Module):
 
         :param folder: source folder
         :return: an array containing one or optimizer
-        """ 
+        """
         res = [
             torch.optim.Adam(self.parameters(), lr=0.001)
         ]
         if folder is not None:
             res[0].load_state_dict(torch.load(os.path.join(folder, 'optimizer.pth')))
         return res
-    
+
     def save_optimizers(self, optimizers, folder):
         """
         Save the optimizer in a given folder.
 
         :param folder: destination folder
-        """ 
+        """
         torch.save(optimizers[0].state_dict(), os.path.join(folder, 'optimizer.pth'))
-    
+
     def convert_widths(self, w, max_width):
         """
         Converts an input widths (in pixel columns) to output widths (in
@@ -235,20 +235,20 @@ class OCROnly(torch.nn.Module):
 
         :param w: tensor or array containing a list of width
         :return: long tensor containing the converted widths
-        """ 
+        """
         return torch.Tensor([min(self.__length_map[x], max_width) for x in w]).long()
-    
+
     def __init_length_map(self):
         """
         Initializes the map conversion system for convert_width(). Note
         that it tries to cache the resuts in dat/length_map.json.
-        """ 
+        """
         max_length = 2000
         try:
             self.__length_map = json.load(open(os.path.join('dat', 'length_map.json'), 'rt'))
             return
         except: pass
-        
+
         tns = torch.zeros(1, 1, 8, max_length)
         with torch.no_grad():
             out  = self.backbone(tns)
@@ -265,14 +265,14 @@ class OCROnly(torch.nn.Module):
         try:
             json.dump(self.__length_map, open(os.path.join('dat', 'length_map.json'), 'wt'))
         except: pass
-    
+
     def forward(self, x):
         """
         Processes an input batch.
 
         :param x: input batch
         :return: the network's output, ready to be convered to a string
-        """ 
+        """
         x = self.backbone(x)
         x = self.act(x)
         x = torch.mean(x, axis=2)
@@ -293,20 +293,20 @@ class ColClassifier(torch.nn.Module):
         self.embed = torch.nn.Linear(self.backbone.output_dim, feature_dim)
         self.rnn  = torch.nn.LSTM(feature_dim, feature_dim, 2, bidirectional=True)
         self.head = torch.nn.Linear(2*feature_dim, nb_classes)
-    
+
     def forward(self, x):
         x = self.embed(self.backbone(x).transpose(1,2).transpose(0,1))
         x, _ = self.rnn(x)
         x = self.head(x)
         return x.transpose(0,1)
-    
+
     def save(self, folder):
         os.makedirs(folder, exist_ok=True)
         torch.save(self.backbone.state_dict(), os.path.join(folder, 'backbone.pth'))
         torch.save(self.embed.state_dict(), os.path.join(folder, 'embed.pth'))
         torch.save(self.rnn.state_dict(), os.path.join(folder, 'rnn.pth'))
         torch.save(self.head.state_dict(), os.path.join(folder, 'head.pth'))
-    
+
     def load(self, folder):
         self.backbone.load_state_dict(torch.load(os.path.join(folder, 'backbone.pth')))
         self.embed.load_state_dict(torch.load(os.path.join(folder, 'embed.pth')))
@@ -319,7 +319,7 @@ class SelOCR(torch.nn.Module):
     groups together a font group classifier and several OCR models. When
     processing a text line, it first classifies it, and then applies the
     best OCR model for the detected font group.
-    
+
     If there is no OCR model for this font group, then model number 0
     is used, which implies:
     a) there must be a model number 0,
@@ -334,39 +334,39 @@ class SelOCR(torch.nn.Module):
         :param classifier: a classifier which output can be averaged on axis 1 to make a global line prediction
         :param models: a map from integer class number (accordingly to the classifier) to OCR models specialized for the corresponding font groups
         :return: an instance of the class
-        """ 
+        """
         super().__init__()
         self.classifier = classifier
         self.models     = models # 0 has to be the baseline
         self.params = {'type': 'SelOCR'}
         if self.models is not None and not 0 in self.models:
             self.models[0] = self.models[min(self.models)]
-    
+
     def save(self, folder):
         """
         Saves the classifier and OCR models to a folder.
         Creates this folder if needed.
 
         :param folder: destination folder
-        """ 
+        """
         self.classifier.save(os.path.join(folder, 'classifier'))
         for n in self.models:
             self.models[n].save(os.path.join(folder, '%s' % n))
         self.params['models'] = [x for x in self.models]
         json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
-    
+
     def load(self, folder):
         """
         Loads the classifier and OCR models from a folder.
 
         :param folder: source folder
-        """ 
+        """
         self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
         self.classifier = load_network(os.path.join(folder, 'classifier'))
         self.models = {n: load_network(os.path.join(folder, '%d' % n)) for n in self.params['models']}
         if not 0 in self.models:
             self.models[0] = self.models[min(self.models)]
-    
+
     def load_from_folder(folder):
         """
         Static method. Loads an instance of the class from a specific
@@ -378,7 +378,7 @@ class SelOCR(torch.nn.Module):
         net = SelOCR(None, None)
         net.load(folder)
         return net
-    
+
     def to(self, device):
         """
         Overriding Pytorch's to() method, as it doesn't cope well
@@ -391,7 +391,7 @@ class SelOCR(torch.nn.Module):
         for m in self.models:
             self.models[m] = self.models[m].to(device)
         return self
-    
+
     def forward(self, x, model_idx=None):
         """
         Processes an input batch - batch which must contain only one
@@ -399,7 +399,7 @@ class SelOCR(torch.nn.Module):
 
         :param x: input batch
         :return: the network's output, ready to be convered to a string
-        """ 
+        """
         if x.shape[0]!=1:
             raise Exception('SelOCR cannot work on batches containing multiple inputs, sorry')
         if model_idx == None:
@@ -419,17 +419,17 @@ class COCR(torch.nn.Module):
         """
         Constructor of the class. Provide it with a classifier, and a
         map of models. It is recommended to actually use a baseline
-        model (multiple instances of it) and fine-tune it. 
+        model (multiple instances of it) and fine-tune it.
 
         :param classifier: a classifier which output has the same length as OCR outputs. You can use an OCR model there.
         :param models: a map from integer class number (accordingly to the classifier) to OCR models
         :return: an instance of the class
-        """ 
+        """
         super().__init__()
         self.classifier = classifier
         self.models     = models
         self.params     = {'type': 'COCR'}
-    
+
     def convert_widths(self, w, max_width):
         """
         Converts an input widths (in pixel columns) to output widths (in
@@ -437,22 +437,22 @@ class COCR(torch.nn.Module):
 
         :param w: tensor or array containing a list of width
         :return: long tensor containing the converted widths
-        """ 
+        """
         return self.models[self.params['models'][0]].convert_widths(w, max_width)
-    
+
     def save(self, folder):
         """
         Saves the classifier and OCR models to a folder.
         Creates this folder if needed.
 
         :param folder: destination folder
-        """ 
+        """
         self.classifier.save(os.path.join(folder, 'classifier'))
         for n in self.models:
             self.models[n].save(os.path.join(folder, '%s' % n))
         self.params['models'] = [x for x in self.models]
         json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
-    
+
     def to(self, device):
         """
         Overriding Pytorch's to() method, as it doesn't cope well
@@ -465,7 +465,7 @@ class COCR(torch.nn.Module):
         for m in self.models:
             self.models[m] = self.models[m].to(device)
         return self
-    
+
     def parameters(self):
         """
         Overriding Pytorch's parameters() method, as it doesn't cope well
@@ -477,7 +477,7 @@ class COCR(torch.nn.Module):
         for n in self.models:
             res += [x for x in self.models[n].parameters()]
         return res
-    
+
     def load_from_folder(folder):
         """
         Static method. Loads an instance of the class from a specific
@@ -489,17 +489,17 @@ class COCR(torch.nn.Module):
         net = COCR(None, None)
         net.load(folder)
         return net
-    
+
     def load(self, folder):
         """
         Loads the classifier and OCR models from a folder.
 
         :param folder: source folder
-        """ 
+        """
         self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
         self.classifier = load_network(os.path.join(folder, 'classifier'))
         self.models = {n: load_network(os.path.join(folder, '%d' % n)) for n in self.params['models']}
-    
+
     def get_optimizers(self, folder=None):
         """
         Returns an array containing optimizers for each part of the
@@ -508,7 +508,7 @@ class COCR(torch.nn.Module):
 
         :param folder: source folder
         :return: an array containing several optimizers
-        """ 
+        """
         res = [
             torch.optim.Adam(self.classifier.parameters(), lr=0.001)
         ] + [
@@ -519,24 +519,24 @@ class COCR(torch.nn.Module):
             for i, n in enumerate(sorted(self.models)):
                 res[i+1].load_state_dict(torch.load(os.path.join(folder, '%d' % n, 'optimizer.pth')))
         return res
-    
+
     def save_optimizers(self, optimizers, folder):
         """
         Save the optimizer in a given folder.
 
         :param folder: destination folder
-        """ 
+        """
         torch.save(optimizers[0].state_dict(), os.path.join(folder, 'classifier', 'optimizer.pth'))
         for i, n in enumerate(sorted(self.models)):
             torch.save(optimizers[i+1].state_dict(), os.path.join(folder, '%d' % n, 'optimizer.pth'))
-    
+
     def forward(self, x, fast_cocr=True):
         """
         Processes an input batch
 
         :param x: input batch
         :return: the network's output, ready to be convered to a string
-        """ 
+        """
         scores = F.softmax(self.classifier(x), dim=2)
         res = 0
         for n in self.models:
@@ -557,12 +557,12 @@ class DHCOCR(torch.nn.Module):
         """
         Constructor of the class. Provide it with a classifier, and a
         map of models. It is recommended to actually use a baseline
-        model (multiple instances of it) and fine-tune it. 
+        model (multiple instances of it) and fine-tune it.
 
         :param classifier: a classifier which output has the same length as OCR outputs. You can use an OCR model there.
         :param models: a map from integer class number (accordingly to the classifier) to OCR models
         :return: an instance of the class
-        """ 
+        """
         super().__init__()
         self.classifier = classifier
         self.models     = models
@@ -581,16 +581,16 @@ class DHCOCR(torch.nn.Module):
 
         :param w: tensor or array containing a list of width
         :return: long tensor containing the converted widths
-        """ 
+        """
         return self.models[self.params['models'][0]].convert_widths(w, max_width)
-    
+
     def save(self, folder):
         """
         Saves the classifier and OCR models to a folder.
         Creates this folder if needed.
 
         :param folder: destination folder
-        """ 
+        """
         self.classifier.save(os.path.join(folder, 'classifier'))
         self.text_head.save(os.path.join(folder,  'text-head'))
         self.fogr_head.save(os.path.join(folder,  'fogr-head'))
@@ -598,7 +598,7 @@ class DHCOCR(torch.nn.Module):
             self.models[n].save(os.path.join(folder, '%s' % n))
         self.params['models'] = [x for x in self.models]
         json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
-    
+
     def to(self, device):
         """
         Overriding Pytorch's to() method, as it doesn't cope well
@@ -613,7 +613,7 @@ class DHCOCR(torch.nn.Module):
         for m in self.models:
             self.models[m] = self.models[m].to(device)
         return self
-    
+
     def parameters(self):
         """
         Overriding Pytorch's parameters() method, as it doesn't cope well
@@ -627,7 +627,7 @@ class DHCOCR(torch.nn.Module):
         for n in self.models:
             res += [x for x in self.models[n].parameters()]
         return res
-    
+
     def load_from_folder(folder):
         """
         Static method. Loads an instance of the class from a specific
@@ -639,21 +639,21 @@ class DHCOCR(torch.nn.Module):
         net = DHCOCR(None, None)
         net.load(folder)
         return net
-    
+
     def load(self, folder):
         """
         Loads the classifier and OCR models from a folder.
 
         :param folder: source folder
-        """ 
+        """
         self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
         self.classifier = load_network(os.path.join(folder, 'classifier'))
         self.models = {n: load_network(os.path.join(folder, '%d' % n)) for n in self.params['models']}
         stack_dim       = self.classifier.head.out_features + self.models[min(self.models)].head.out_features
         self.text_head  = load_network(os.path.join(folder, 'text-head'))
         self.fogr_head  = load_network(os.path.join(folder, 'fogr-head'))
-        
-    
+
+
     def get_optimizers(self, folder=None):
         """
         Returns an array containing optimizers for each part of the
@@ -662,7 +662,7 @@ class DHCOCR(torch.nn.Module):
 
         :param folder: source folder
         :return: an array containing several optimizers
-        """ 
+        """
         res = [
             torch.optim.Adam(self.classifier.parameters(), lr=0.001),
             torch.optim.Adam(self.text_head.parameters(), lr=0.001),
@@ -679,26 +679,26 @@ class DHCOCR(torch.nn.Module):
             for i, n in enumerate(sorted(self.models)):
                 res[i+3].load_state_dict(torch.load(os.path.join(folder, '%d' % n, 'optimizer.pth')))
         return res
-    
+
     def save_optimizers(self, optimizers, folder):
         """
         Save the optimizer in a given folder.
 
         :param folder: destination folder
-        """ 
+        """
         torch.save(optimizers[0].state_dict(), os.path.join(folder, 'classifier', 'optimizer.pth'))
         torch.save(optimizers[1].state_dict(), os.path.join(folder, 'text-head', 'optimizer.pth'))
         torch.save(optimizers[2].state_dict(), os.path.join(folder, 'fogr-head', 'optimizer.pth'))
         for i, n in enumerate(sorted(self.models)):
             torch.save(optimizers[i+1].state_dict(), os.path.join(folder, '%d' % n, 'optimizer.pth'))
-    
+
     def forward(self, x):
         """
         Processes an input batch
 
         :param x: input batch
         :return: the network's output, ready to be convered to a string
-        """ 
+        """
         scores = F.softmax(self.classifier(x), dim=2)
         txt = 0
         for n in self.models:
@@ -718,30 +718,30 @@ class PCOCR(torch.nn.Module):
     def __init__(self, classifier_path, baseline_path, font_groups, common_backbone, common_embed, common_rnn, common_head):
         super().__init__()
         self.classifier = load_network(classifier_path)
-        
+
         unique_baseline = load_network(baseline_path)
         if common_backbone:
             self.backbone = unique_baseline.backbone
         else:
             self.backbone = {n: load_network(baseline_path).backbone for n in font_groups} # not optimized, but... well...
-        
+
         if common_embed:
             self.embed = unique_baseline.embed
         else:
             self.embed = {n: load_network(baseline_path).embed for n in font_groups}
-        
+
         if common_rnn:
             self.rnn = unique_baseline.rnn
         else:
             self.rnn = {n: load_network(baseline_path).rnn for n in font_groups}
-        
+
         if common_head:
             self.head = unique_baseline.head
         else:
             self.head = {n: load_network(baseline_path).head for n in font_groups}
-        
-        # ~ self.act = 
-        
+
+        # ~ self.act =
+
         self.params     = {
             'type': 'PCOCR',
             'common-backbone': common_backbone,
@@ -749,10 +749,10 @@ class PCOCR(torch.nn.Module):
             'common-rnn': common_rnn,
             'common-head': common_head
         }
-    
+
     def forward(self, x):
         scores = F.softmax(self.classifier(x), dim=2)
-        
+
         if self.params['common-backbone']:
             x = self.backbone(x)
         else:
@@ -761,7 +761,7 @@ class PCOCR(torch.nn.Module):
                 y += self.backbone[n](x) * scores[:, :, n].unsqueeze(-1)
             x = y
         x = self.act(x)
-        
+
         if self.params['common-embed']:
             x = self.embed(x)
         else:
@@ -769,17 +769,17 @@ class PCOCR(torch.nn.Module):
             for n in self.models:
                 y += self.embed[n](x) * scores[:, :, n].unsqueeze(-1)
             x = y
-        
-        
+
+
         x = self.backbone(x)
-        
+
         x = torch.mean(x, axis=2)
         x = x.permute(2, 0, 1)
         x = self.embed(x)
         x, _ = self.rnn(x)
         x = self.head(x)
-        
-        
+
+
         res = 0
         for n in self.models:
             s = scores[:, :, n].unsqueeze(-1)
