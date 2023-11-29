@@ -4,6 +4,9 @@ import numpy as np
 
 wtf_pattern = re.compile(r'(.[\u02F3\u1D53\u0300\u2013\u032E\u208D\u203F\u0311\u0323\u035E\u031C\u02FC\u030C\u02F9\u0328\u032D\u02F4\u032F\u0330\u035C\u0302\u0327\u0357\u0308\u0351\u0304\u02F2\u0352\u0355\u032C\u030B\u0339\u0301\u02F1\u0303\u0306\u030A\u0325\u0307\u0354\u02F0\u0060\u030d\u0364\u0303]*)', re.UNICODE | re.IGNORECASE)
 def split(s):
+    """
+    Split string with accented letters
+    """
     return list(wtf_pattern.findall(s))
 
 

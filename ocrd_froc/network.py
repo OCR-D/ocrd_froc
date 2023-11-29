@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import json
+from os.path import join
 
 def load_network(folder):
     """
@@ -13,7 +14,7 @@ def load_network(folder):
     :param folder: folder containing the files
     :return: a network which can be used for OCR
     """
-    p = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
+    p = json.load(open(join(folder, 'params.json'), 'rt'))
     if p['type']=='OCROnly':
         return OCROnly.load_from_folder(folder)
     if p['type']=='COCR':
@@ -111,7 +112,7 @@ class SimpleHead(torch.nn.Module):
         :param folder: source folder
         :return: an instance of the class
         """
-        p = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
+        p = json.load(open(join(folder, 'params.json'), 'rt'))
         net = SimpleHead(input_dim=p['input_dim'], output_dim=p['output_dim'])
         net.load(folder)
         return net
@@ -123,8 +124,8 @@ class SimpleHead(torch.nn.Module):
 
         :param folder: source folder
         """
-        self.load_state_dict(torch.load(os.path.join(folder, 'net.pth')))
-        self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
+        self.load_state_dict(torch.load(join(folder, 'net.pth')))
+        self.params = json.load(open(join(folder, 'params.json'), 'rt'))
 
     def save(self, folder):
         """
@@ -133,8 +134,9 @@ class SimpleHead(torch.nn.Module):
         :param folder: destination folder
         """
         os.makedirs(folder, exist_ok=True)
-        torch.save(self.state_dict(), os.path.join(folder, 'net.pth'))
-        json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
+        torch.save(self.state_dict(), join(folder, 'net.pth'))
+        with open(join(folder, 'params.json'), 'wt') as f:
+            json.dump(self.params, f, indent=4)
 
     def forward(self, x):
         x, _ = self.rnn(x)
@@ -174,7 +176,7 @@ class OCROnly(torch.nn.Module):
         :param folder: source folder
         :return: an instance of the class
         """
-        p = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
+        p = json.load(open(join(folder, 'params.json'), 'rt'))
         net = OCROnly(nb_classes=p['nb_classes'], feature_dim=p['feature_dim'], lstm_layers=p['lstm_layers'])
         net.load(folder)
         return net
@@ -186,11 +188,12 @@ class OCROnly(torch.nn.Module):
         :param folder: destination folder
         """
         os.makedirs(folder, exist_ok=True)
-        torch.save(self.backbone.state_dict(), os.path.join(folder, 'backbone.pth'))
-        torch.save(self.embed.state_dict(), os.path.join(folder, 'embed.pth'))
-        torch.save(self.rnn.state_dict(), os.path.join(folder, 'rnn.pth'))
-        torch.save(self.head.state_dict(), os.path.join(folder, 'head.pth'))
-        json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
+        torch.save(self.backbone.state_dict(), join(folder, 'backbone.pth'))
+        torch.save(self.embed.state_dict(), join(folder, 'embed.pth'))
+        torch.save(self.rnn.state_dict(), join(folder, 'rnn.pth'))
+        torch.save(self.head.state_dict(), join(folder, 'head.pth'))
+        with open(join(folder, 'params.json'), 'wt') as f:
+            json.dump(self.params, f, indent=4)
 
     def load(self, folder):
         """
@@ -199,11 +202,11 @@ class OCROnly(torch.nn.Module):
 
         :param folder: source folder
         """
-        self.backbone.load_state_dict(torch.load(os.path.join(folder, 'backbone.pth')))
-        self.embed.load_state_dict(torch.load(os.path.join(folder, 'embed.pth')))
-        self.rnn.load_state_dict(torch.load(os.path.join(folder, 'rnn.pth')))
-        self.head.load_state_dict(torch.load(os.path.join(folder, 'head.pth')))
-        self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
+        self.backbone.load_state_dict(torch.load(join(folder, 'backbone.pth')))
+        self.embed.load_state_dict(torch.load(join(folder, 'embed.pth')))
+        self.rnn.load_state_dict(torch.load(join(folder, 'rnn.pth')))
+        self.head.load_state_dict(torch.load(join(folder, 'head.pth')))
+        self.params = json.load(open(join(folder, 'params.json'), 'rt'))
 
     def get_optimizers(self, folder=None):
         """
@@ -217,7 +220,7 @@ class OCROnly(torch.nn.Module):
             torch.optim.Adam(self.parameters(), lr=0.001)
         ]
         if folder is not None:
-            res[0].load_state_dict(torch.load(os.path.join(folder, 'optimizer.pth')))
+            res[0].load_state_dict(torch.load(join(folder, 'optimizer.pth')))
         return res
 
     def save_optimizers(self, optimizers, folder):
@@ -226,7 +229,7 @@ class OCROnly(torch.nn.Module):
 
         :param folder: destination folder
         """
-        torch.save(optimizers[0].state_dict(), os.path.join(folder, 'optimizer.pth'))
+        torch.save(optimizers[0].state_dict(), join(folder, 'optimizer.pth'))
 
     def convert_widths(self, w, max_width):
         """
@@ -245,15 +248,16 @@ class OCROnly(torch.nn.Module):
         """
         max_length = 2000
         try:
-            self.__length_map = json.load(open(os.path.join('dat', 'length_map.json'), 'rt'))
-            return
-        except: pass
+            with open(join('dat', 'length_map.json'), 'rt', encoding='utf-8') as f:
+                self.__length_map = json.load(f)
+                return
+        except:
+            # Which exceptions are caught here and why?
+            pass
 
         tns = torch.zeros(1, 1, 8, max_length)
         with torch.no_grad():
             out  = self.backbone(tns)
-            last = out[0][0][0][out.shape[3]//2]
-            ls  = 0
             pos = 0
             self.__length_map = []
             for i in range(max_length):
@@ -262,9 +266,8 @@ class OCROnly(torch.nn.Module):
                 while pos<out.shape[2]-1 and out[0,0,pos]!=out[0,0,pos+1]:
                     pos += 1
                 self.__length_map.append(pos-1)
-        try:
-            json.dump(self.__length_map, open(os.path.join('dat', 'length_map.json'), 'wt'))
-        except: pass
+        with open(join('dat', 'length_map.json'), 'wt', encoding='utf-8'):
+            json.dump(self.__length_map, f)
 
     def forward(self, x):
         """
@@ -302,16 +305,16 @@ class ColClassifier(torch.nn.Module):
 
     def save(self, folder):
         os.makedirs(folder, exist_ok=True)
-        torch.save(self.backbone.state_dict(), os.path.join(folder, 'backbone.pth'))
-        torch.save(self.embed.state_dict(), os.path.join(folder, 'embed.pth'))
-        torch.save(self.rnn.state_dict(), os.path.join(folder, 'rnn.pth'))
-        torch.save(self.head.state_dict(), os.path.join(folder, 'head.pth'))
+        torch.save(self.backbone.state_dict(), join(folder, 'backbone.pth'))
+        torch.save(self.embed.state_dict(), join(folder, 'embed.pth'))
+        torch.save(self.rnn.state_dict(), join(folder, 'rnn.pth'))
+        torch.save(self.head.state_dict(), join(folder, 'head.pth'))
 
     def load(self, folder):
-        self.backbone.load_state_dict(torch.load(os.path.join(folder, 'backbone.pth')))
-        self.embed.load_state_dict(torch.load(os.path.join(folder, 'embed.pth')))
-        self.rnn.load_state_dict(torch.load(os.path.join(folder, 'rnn.pth')))
-        self.head.load_state_dict(torch.load(os.path.join(folder, 'head.pth')))
+        self.backbone.load_state_dict(torch.load(join(folder, 'backbone.pth')))
+        self.embed.load_state_dict(torch.load(join(folder, 'embed.pth')))
+        self.rnn.load_state_dict(torch.load(join(folder, 'rnn.pth')))
+        self.head.load_state_dict(torch.load(join(folder, 'head.pth')))
 
 class SelOCR(torch.nn.Module):
     """
@@ -349,11 +352,12 @@ class SelOCR(torch.nn.Module):
 
         :param folder: destination folder
         """
-        self.classifier.save(os.path.join(folder, 'classifier'))
+        self.classifier.save(join(folder, 'classifier'))
         for n in self.models:
-            self.models[n].save(os.path.join(folder, '%s' % n))
-        self.params['models'] = [x for x in self.models]
-        json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
+            self.models[n].save(join(folder, '%s' % n))
+        self.params['models'] = self.models.keys()
+        with open(join(folder, 'params.json'), 'wt') as f:
+            json.dump(self.params, f, indent=4)
 
     def load(self, folder):
         """
@@ -361,9 +365,9 @@ class SelOCR(torch.nn.Module):
 
         :param folder: source folder
         """
-        self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
-        self.classifier = load_network(os.path.join(folder, 'classifier'))
-        self.models = {n: load_network(os.path.join(folder, '%d' % n)) for n in self.params['models']}
+        self.params = json.load(open(join(folder, 'params.json'), 'rt', encoding='utf-8'))
+        self.classifier = load_network(join(folder, 'classifier'))
+        self.models = {n: load_network(join(folder, '%d' % n)) for n in self.params['models']}
         if not 0 in self.models:
             self.models[0] = self.models[min(self.models)]
 
@@ -400,14 +404,15 @@ class SelOCR(torch.nn.Module):
         :param x: input batch
         :return: the network's output, ready to be convered to a string
         """
-        if x.shape[0]!=1:
-            raise Exception('SelOCR cannot work on batches containing multiple inputs, sorry')
+        if x.shape[0] != 1:
+            raise ValueError('SelOCR cannot work on batches containing multiple inputs, sorry')
         if model_idx == None:
             scores = self.classifier(x).sum(axis=1)#.view(-1,13).mean(axis=1)
             n = torch.argmax(scores[0,:]).item()
             model_idx = n
         model_idx = model_idx if model_idx in self.models else 0
         return self.models[model_idx](x)
+
 class COCR(torch.nn.Module):
     """
     COCR stands for Combined OCR. This system combines multiple OCR
@@ -427,8 +432,8 @@ class COCR(torch.nn.Module):
         """
         super().__init__()
         self.classifier = classifier
-        self.models     = models
-        self.params     = {'type': 'COCR'}
+        self.models = models
+        self.params = {'type': 'COCR'}
 
     def convert_widths(self, w, max_width):
         """
@@ -447,11 +452,12 @@ class COCR(torch.nn.Module):
 
         :param folder: destination folder
         """
-        self.classifier.save(os.path.join(folder, 'classifier'))
+        self.classifier.save(join(folder, 'classifier'))
         for n in self.models:
-            self.models[n].save(os.path.join(folder, '%s' % n))
+            self.models[n].save(join(folder, '%s' % n))
         self.params['models'] = [x for x in self.models]
-        json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
+        with open(join(folder, 'params.json'), 'wt', encoding='utf-8') as f:
+            json.dump(self.params, f, indent=4)
 
     def to(self, device):
         """
@@ -496,9 +502,10 @@ class COCR(torch.nn.Module):
 
         :param folder: source folder
         """
-        self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
-        self.classifier = load_network(os.path.join(folder, 'classifier'))
-        self.models = {n: load_network(os.path.join(folder, '%d' % n)) for n in self.params['models']}
+        with open(join(folder, 'params.json'), 'rt') as f:
+            self.params = json.load(f)
+        self.classifier = load_network(join(folder, 'classifier'))
+        self.models = {n: load_network(join(folder, '%d' % n)) for n in self.params['models']}
 
     def get_optimizers(self, folder=None):
         """
@@ -515,9 +522,9 @@ class COCR(torch.nn.Module):
             torch.optim.Adam(self.models[n].parameters(), lr=0.001) for n in sorted(self.models)
         ]
         if folder is not None:
-            res[0].load_state_dict(torch.load(os.path.join(folder, 'classifier', 'optimizer.pth')))
+            res[0].load_state_dict(torch.load(join(folder, 'classifier', 'optimizer.pth')))
             for i, n in enumerate(sorted(self.models)):
-                res[i+1].load_state_dict(torch.load(os.path.join(folder, '%d' % n, 'optimizer.pth')))
+                res[i+1].load_state_dict(torch.load(join(folder, '%d' % n, 'optimizer.pth')))
         return res
 
     def save_optimizers(self, optimizers, folder):
@@ -526,9 +533,9 @@ class COCR(torch.nn.Module):
 
         :param folder: destination folder
         """
-        torch.save(optimizers[0].state_dict(), os.path.join(folder, 'classifier', 'optimizer.pth'))
+        torch.save(optimizers[0].state_dict(), join(folder, 'classifier', 'optimizer.pth'))
         for i, n in enumerate(sorted(self.models)):
-            torch.save(optimizers[i+1].state_dict(), os.path.join(folder, '%d' % n, 'optimizer.pth'))
+            torch.save(optimizers[i+1].state_dict(), join(folder, '%d' % n, 'optimizer.pth'))
 
     def forward(self, x, fast_cocr=True):
         """
@@ -541,7 +548,7 @@ class COCR(torch.nn.Module):
         res = 0
         for n in self.models:
             s = scores[:, :, n].unsqueeze(-1)
-            if fast_cocr and torch.max(s)<0.1:
+            if fast_cocr and torch.max(s) < 0.1:
                 continue
             y = self.models[n](x)
             res += y * s
@@ -569,10 +576,10 @@ class DHCOCR(torch.nn.Module):
         if classifier is None or models is None:
             self.text_head = None
         else:
-            stack_dim       = self.classifier.head.out_features + self.models[min(self.models)].head.out_features
-            self.text_head  = SimpleHead(stack_dim, self.models[min(self.models)].head.out_features)
-            self.fogr_head  = SimpleHead(stack_dim, self.classifier.head.out_features)
-        self.params     = {'type': 'DHCOCR'}
+            stack_dim = self.classifier.head.out_features + self.models[min(self.models)].head.out_features
+            self.text_head = SimpleHead(stack_dim, self.models[min(self.models)].head.out_features)
+            self.fogr_head = SimpleHead(stack_dim, self.classifier.head.out_features)
+        self.params = {'type': 'DHCOCR'}
 
     def convert_widths(self, w, max_width):
         """
@@ -591,13 +598,14 @@ class DHCOCR(torch.nn.Module):
 
         :param folder: destination folder
         """
-        self.classifier.save(os.path.join(folder, 'classifier'))
-        self.text_head.save(os.path.join(folder,  'text-head'))
-        self.fogr_head.save(os.path.join(folder,  'fogr-head'))
+        self.classifier.save(join(folder, 'classifier'))
+        self.text_head.save(join(folder,  'text-head'))
+        self.fogr_head.save(join(folder,  'fogr-head'))
         for n in self.models:
-            self.models[n].save(os.path.join(folder, '%s' % n))
+            self.models[n].save(join(folder, '%s' % n))
         self.params['models'] = [x for x in self.models]
-        json.dump(self.params, open(os.path.join(folder, 'params.json'), 'wt'), indent=4)
+        with open(join(folder, 'params.json'), 'wt') as f:
+            json.dump(self.params, f, indent=4)
 
     def to(self, device):
         """
@@ -646,12 +654,13 @@ class DHCOCR(torch.nn.Module):
 
         :param folder: source folder
         """
-        self.params = json.load(open(os.path.join(folder, 'params.json'), 'rt'))
-        self.classifier = load_network(os.path.join(folder, 'classifier'))
-        self.models = {n: load_network(os.path.join(folder, '%d' % n)) for n in self.params['models']}
-        stack_dim       = self.classifier.head.out_features + self.models[min(self.models)].head.out_features
-        self.text_head  = load_network(os.path.join(folder, 'text-head'))
-        self.fogr_head  = load_network(os.path.join(folder, 'fogr-head'))
+        with open(join(folder, 'params.json'), 'rt') as f:
+            self.params = json.load(f)
+        self.classifier = load_network(join(folder, 'classifier'))
+        self.models = {n: load_network(join(folder, '%d' % n)) for n in self.params['models']}
+        stack_dim = self.classifier.head.out_features + self.models[min(self.models)].head.out_features
+        self.text_head = load_network(join(folder, 'text-head'))
+        self.fogr_head = load_network(join(folder, 'fogr-head'))
 
 
     def get_optimizers(self, folder=None):
@@ -671,13 +680,13 @@ class DHCOCR(torch.nn.Module):
             torch.optim.Adam(self.models[n].parameters(), lr=0.001) for n in sorted(self.models)
         ]
         if folder is not None:
-            res[0].load_state_dict(torch.load(os.path.join(folder, 'classifier', 'optimizer.pth')))
+            res[0].load_state_dict(torch.load(join(folder, 'classifier', 'optimizer.pth')))
             try:
-                res[1].load_state_dict(torch.load(os.path.join(folder, 'text-head', 'optimizer.pth')))
-                res[2].load_state_dict(torch.load(os.path.join(folder, 'fogr-head', 'optimizer.pth')))
+                res[1].load_state_dict(torch.load(join(folder, 'text-head', 'optimizer.pth')))
+                res[2].load_state_dict(torch.load(join(folder, 'fogr-head', 'optimizer.pth')))
             except: pass
             for i, n in enumerate(sorted(self.models)):
-                res[i+3].load_state_dict(torch.load(os.path.join(folder, '%d' % n, 'optimizer.pth')))
+                res[i+3].load_state_dict(torch.load(join(folder, '%d' % n, 'optimizer.pth')))
         return res
 
     def save_optimizers(self, optimizers, folder):
@@ -686,11 +695,11 @@ class DHCOCR(torch.nn.Module):
 
         :param folder: destination folder
         """
-        torch.save(optimizers[0].state_dict(), os.path.join(folder, 'classifier', 'optimizer.pth'))
-        torch.save(optimizers[1].state_dict(), os.path.join(folder, 'text-head', 'optimizer.pth'))
-        torch.save(optimizers[2].state_dict(), os.path.join(folder, 'fogr-head', 'optimizer.pth'))
+        torch.save(optimizers[0].state_dict(), join(folder, 'classifier', 'optimizer.pth'))
+        torch.save(optimizers[1].state_dict(), join(folder, 'text-head', 'optimizer.pth'))
+        torch.save(optimizers[2].state_dict(), join(folder, 'fogr-head', 'optimizer.pth'))
         for i, n in enumerate(sorted(self.models)):
-            torch.save(optimizers[i+1].state_dict(), os.path.join(folder, '%d' % n, 'optimizer.pth'))
+            torch.save(optimizers[i+1].state_dict(), join(folder, '%d' % n, 'optimizer.pth'))
 
     def forward(self, x):
         """

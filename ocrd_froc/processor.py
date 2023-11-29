@@ -20,7 +20,7 @@ from ocrd_models.ocrd_page import (
 from json import loads
 from pkg_resources import resource_string
 from ocrd_modelfactory import page_from_file
-from ocrd_froc.froc import Froc
+from .froc import Froc
 
 OCRD_TOOL = loads(resource_string(__name__, 'ocrd-tool.json'))
 
@@ -48,17 +48,15 @@ class FROCProcessor(Processor):
             textStyle = TextStyleType()
             segment.set_TextStyle(textStyle)
 
-
         method = self.parameter['method']
 
         classification_result = textStyle.get_fontFamily()
         result = {}
 
-        if classification_result == None and method != 'COCR':
+        if not classification_result and method != 'COCR':
 
             result = self.froc.classify(image)
             classification_result = ''
-
 
             font_class_priors = self.parameter['font_class_priors']
             output_font = True

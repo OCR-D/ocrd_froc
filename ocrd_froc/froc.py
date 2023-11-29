@@ -59,7 +59,7 @@ class Froc:
 
 
     @classmethod
-    def load(cls, input):
+    def load(cls, inp):
         """ Loads a type groups classifier from a file
 
             Parameters
@@ -70,14 +70,12 @@ class Froc:
 
         """
 
-        if type(input) is str:
-            f = open(input, 'rb')
-            res = cls.load(f)
-            f.close()
-            return res
-        if not type(input) is _io.BufferedReader:
-            raise Exception('Froc.load() requires a string or a file')
-        res = pickle.load(input)
+        if isinstance(inp, str):
+            with open(inp, 'rb') as f:
+                return cls.load(f)
+        if not isinstance(inp, _io.BufferedReader):
+            raise ValueError(f'Froc.load() requires a string or a file, this is neither: {inp}')
+        res = pickle.load(inp)
         # If trained with CUDA and loaded on a device without CUDA
         res.dev = torch.device(res.dev if torch.cuda.is_available() else "cpu")
         res.selocr.to(res.dev)
@@ -94,13 +92,12 @@ class Froc:
                     be stored.
         """
 
-        if type(output) is str:
-            f = open(output, 'wb')
-            self.save(f)
-            f.close()
-            return
-        if not type(output) is _io.BufferedWriter:
-            raise Exception('save() requires a string or a file')
+        if isinstance(output, str):
+            with open(output, 'wb') as f:
+                self.save(f)
+                return
+        if not isinstance(output, _io.BufferedWriter):
+            raise ValueError(f'Froc.save() requires a string or a file, this is neither: {output}')
         # Moving the network to the cpu so that it can be reloaded on
         # machines which do not have CUDA available.
         self.selocr.to("cpu")
@@ -109,21 +106,18 @@ class Froc:
         self.selocr.to(self.dev)
         self.cocr.to(self.dev)
 
-    def run(self, pil_image, **kwargs):
+    def run(self, pil_image, method='adaptive', fast_cocr=True, adaptive_treshold=95, classification_result=None):
 
-        method = kwargs.get('method', 'adaptive')
-        fast_cocr = kwargs.get('fast_cocr', True)
-        adaptive_treshold = kwargs.get('adaptive_treshold', 95)
+        if method in ('SelOCR', 'adaptive') and not classification_result:
+            raise ValueError(f"Froc.run(): if method is SelOCR or adaptive, classification_result is required")
 
         tns = self.preprocess_image(pil_image)
 
         if method == 'SelOCR':
-            classification_result = kwargs['classification_result']
             out = self.run_selocr(tns, classification_result)
         elif method == 'COCR':
             out = self.run_cocr(tns, fast_cocr)
         else:
-            classification_result = kwargs['classification_result']
             out = self.run_adaptive(tns, classification_result, fast_cocr, adaptive_treshold)
 
         # constrain to image width, expand to batch format (batch size 1)
@@ -168,9 +162,9 @@ class Froc:
             width = int(pil_image.size[0] * ratio)
             try:
                 pil_image = pil_image.resize((width,32), Image.Resampling.LANCZOS)
-            except:
+            except Exception as e:
                 print('Cannot resize')
-                quit(1)
+                raise e
 
         trans = transforms.Compose([transforms.Grayscale(), transforms.ToTensor()])
 

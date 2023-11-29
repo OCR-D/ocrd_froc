@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import codecs
 import json
 
 from setuptools import setup, find_packages
 
-with codecs.open('README.md', encoding='utf-8') as f:
+with open('README.md', 'r', encoding='utf-8') as f:
     README = f.read()
 with open('./ocrd-tool.json', 'r') as f:
     version = json.load(f)['version']
