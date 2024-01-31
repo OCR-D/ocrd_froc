@@ -36,7 +36,7 @@ class FROCProcessor(Processor):
     def setup(self):
 
         if 'network' not in self.parameter:
-            self.parameter['network'] = resource_filename(f'{__name__}.models', 'default.froc')
+            self.parameter['network'] = str(resource_filename(f'ocrd_froc.models', 'default.froc'))
 
         network_file = self.resolve_resource(self.parameter['network'])
         self.froc = Froc.load(network_file)

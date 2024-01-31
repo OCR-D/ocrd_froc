@@ -23,7 +23,7 @@
         },
         "replace_textstyle": {
           "description": "Whether to replace existing textStyle",
-          "type": "bool",
+          "type": "boolean",
           "required": false,
           "default": true
         },
