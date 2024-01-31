@@ -1,6 +1,6 @@
 {
   "version": "0.4.0",
-  "git_url": "https://github.com/MegaloPat/ocrd_froc",
+  "git_url": "https://github.com/OCR-D/ocrd_froc",
   "tools": {
     "ocrd-froc": {
       "executable": "ocrd-froc",
@@ -15,11 +15,17 @@
       "input_file_grp": ["OCR-D-SEG"],
       "output_file_grp": ["OCR-D-OCR"],
       "parameters": {
-        "method": {
+        "ocr_method": {
           "description": "The method to use for text recognition",
           "type": "string",
-          "enum": ["SelOCR", "COCR", "adaptive"],
-          "default": "adaptive"
+          "enum": ["none", "SelOCR", "COCR", "adaptive"],
+          "default": "none"
+        },
+        "replace_textstyle": {
+          "description": "Whether to replace existing textStyle",
+          "type": "bool",
+          "required": false,
+          "default": true
         },
         "network": {
           "description": "The file name of the neural network to use, including sufficient path information. Defaults to the model bundled with ocrd_froc.",
@@ -42,7 +48,20 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["antiqua", "bastarda", "fraktur", "textura", "schwabacher", "greek", "italic", "hebrew", "gotico-antiqua", "manuscript", "rotunda", "other"]
+            "enum": [
+              "antiqua",
+              "bastarda",
+              "fraktur",
+              "textura",
+              "schwabacher",
+              "greek",
+              "italic",
+              "hebrew",
+              "gotico-antiqua",
+              "manuscript",
+              "rotunda",
+              "other"
+            ]
           },
           "default": []
         }

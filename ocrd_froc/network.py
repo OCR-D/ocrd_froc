@@ -1,8 +1,6 @@
 import os
-import copy
-import numpy as np
-import torch
-import torch.nn.functional as F
+import torch    # type: ignore
+import torch.nn.functional as F    # type: ignore
 import json
 from os.path import join
 

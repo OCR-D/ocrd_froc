@@ -6,7 +6,7 @@ Perform font classification and text recognition (in one step) on historic docum
     > iterating over the element hierarchy down to the text line level.
 
     > Then for each line, retrieve the raw image and feed it to the font
-    > classifier (optionally) and the OCR.
+    > classifier and/or the  OCR.
 
     > Annotate font predictions by name and score as a comma-separated
     > list under ``./TextStyle/@fontFamily``, if any.
@@ -60,24 +60,26 @@ OCR-D processor interface ocrd-froc
 
 To be used with PAGE-XML documents in an OCR-D annotation workflow.
 
+```
 Parameters:
 
-    "method" [string - "adaptive"]
-    Possible values: ["SelOCR", "COCR", "adaptive"]
+   "ocr_method" [string - "none"]
     The method to use for text recognition
-    
-    "network" [string]
-    The file name of the neural network to use, including sufficient path information
-
-    "fast_cocr": [boolean - True]
+    Possible values: ["none", "SelOCR", "COCR", "adaptive"]
+   "replace_textstyle" [bool - true]
+    Whether to replace existing textStyle
+   "network" [string]
+    The file name of the neural network to use, including sufficient path
+    information. Defaults to the model bundled with ocrd_froc.
+   "fast_cocr" [boolean - true]
     Whether to use optimization steps on the COCR strategy
-
-    "adaptive_treshold": [integer - 95]
-    Treshold of certitude needed to use SelOCR when using the adaptive strategy
-
-    "font_class_priors": [array]
-    Possible values: ["antiqua", "bastarda", "fraktur", "textura", "schwabacher", "greek", "italic", "hebrew", "gotico-antiqua", "manuscript", "rotunda", "other"]
-    List of font classes which are known to be present on the data when using the 
-    adaptive/SelOCR strategies. When this option is specified, every font classes 
-    not included will be ignored. If 'other' is included in the list, font 
-    classification will not be outputted and a generic model will be used for transcriptions. 
+   "adaptive_treshold" [number - 95]
+    Treshold of certitude needed to use SelOCR when using the adaptive
+    strategy
+   "font_class_priors" [array - []]
+    List of font classes which are known to be present on the data when
+    using the adaptive/SelOCR strategies. When this option is specified,
+    every font classes not included will be ignored. If 'other' is
+    included in the list, font classification will not be outputted and
+    a generic model will be used for transcriptions.
+```

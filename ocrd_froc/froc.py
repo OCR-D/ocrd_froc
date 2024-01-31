@@ -1,10 +1,12 @@
-import _io
-import torch
+from io import BufferedReader, BufferedWriter
 import pickle
-from torchvision import transforms
+
+import torch    # type: ignore
+from torchvision import transforms    # type: ignore
 from PIL import Image
 
-import torch.nn.functional as F
+import torch.nn.functional as F    # type: ignore
+
 from ocrd_froc.converter import Converter
 from ocrd_froc.classmap import ClassMap
 
@@ -73,7 +75,7 @@ class Froc:
         if isinstance(inp, str):
             with open(inp, 'rb') as f:
                 return cls.load(f)
-        if not isinstance(inp, _io.BufferedReader):
+        if not isinstance(inp, BufferedReader):
             raise ValueError(f'Froc.load() requires a string or a file, this is neither: {inp}')
         res = pickle.load(inp)
         # If trained with CUDA and loaded on a device without CUDA
@@ -96,7 +98,7 @@ class Froc:
             with open(output, 'wb') as f:
                 self.save(f)
                 return
-        if not isinstance(output, _io.BufferedWriter):
+        if not isinstance(output, BufferedWriter):
             raise ValueError(f'Froc.save() requires a string or a file, this is neither: {output}')
         # Moving the network to the cpu so that it can be reloaded on
         # machines which do not have CUDA available.
