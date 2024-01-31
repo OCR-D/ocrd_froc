@@ -26,7 +26,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'ocrd-froc=ocrd_froc.cli.ocrd_cli:cli',
+            'ocrd-froc-recognize=ocrd_froc.cli.ocrd_cli:cli',
         ]
     },
 )
