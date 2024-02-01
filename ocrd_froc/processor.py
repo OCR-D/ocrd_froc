@@ -35,11 +35,11 @@ class FROCProcessor(Processor):
 
     def setup(self):
 
-        if 'network' not in self.parameter:
-            self.parameter['network'] = str(resource_filename(f'ocrd_froc.models', 'default.froc'))
+        if 'model' not in self.parameter:
+            self.parameter['model'] = str(resource_filename(f'ocrd_froc.models', 'default.froc'))
 
-        network_file = self.resolve_resource(self.parameter['network'])
-        self.froc = Froc.load(network_file)
+        model = self.resolve_resource(self.parameter['model'])
+        self.froc = Froc.load(model)
 
     def _process_segment(self, segment, image):
         textStyle = segment.get_TextStyle()

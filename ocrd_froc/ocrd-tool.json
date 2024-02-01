@@ -27,7 +27,7 @@
           "required": false,
           "default": true
         },
-        "network": {
+        "model": {
           "description": "The file name of the neural network to use, including sufficient path information. Defaults to the model bundled with ocrd_froc.",
           "type": "string",
           "required": false
