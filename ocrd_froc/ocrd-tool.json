@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "git_url": "https://github.com/OCR-D/ocrd_froc",
   "tools": {
-    "ocrd-froc": {
+    "ocrd-froc-recognize": {
       "executable": "ocrd-froc",
       "description": "Recognise font family/shape (annotating TextStyle) along with text (annotating TextEquiv)",
       "categories": [
