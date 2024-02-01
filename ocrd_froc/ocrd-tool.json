@@ -21,8 +21,8 @@
           "enum": ["none", "SelOCR", "COCR", "adaptive"],
           "default": "none"
         },
-        "replace_textstyle": {
-          "description": "Whether to replace existing textStyle",
+        "overwrite_style": {
+          "description": "Whether to replace existing textStyle before writing new textStyle",
           "type": "boolean",
           "required": false,
           "default": true

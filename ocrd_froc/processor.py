@@ -43,7 +43,7 @@ class FROCProcessor(Processor):
 
     def _process_segment(self, segment, image):
         textStyle = segment.get_TextStyle()
-        if textStyle and self.parameter['replace_textstyle']:
+        if textStyle and self.parameter['overwrite_style']:
             textStyle = None
             segment.set_TextStyle(textStyle)
         if not textStyle:
