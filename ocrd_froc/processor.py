@@ -26,7 +26,7 @@ OCRD_TOOL = loads(resource_string(__name__, 'ocrd-tool.json'))
 class FROCProcessor(Processor):
 
     def __init__(self, *args, **kwargs):
-        kwargs['ocrd_tool'] = OCRD_TOOL['tools']['ocrd-froc']
+        kwargs['ocrd_tool'] = OCRD_TOOL['tools']['ocrd-froc-recognize']
         kwargs['version'] = OCRD_TOOL['version']
         super().__init__(*args, **kwargs)
         if hasattr(self, 'output_file_grp'):
