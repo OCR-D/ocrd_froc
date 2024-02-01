@@ -27,6 +27,13 @@
           "required": false,
           "default": true
         },
+        "min_score_style": {
+          "description": "The minimum score of a font classification to be serialized/used as input for OCR",
+          "type": "number",
+          "format": "float",
+          "required": false,
+          "default": 0
+        },
         "overwrite_text": {
           "description": "Whether to remove any existing TextEquiv before adding text",
           "type": "boolean",

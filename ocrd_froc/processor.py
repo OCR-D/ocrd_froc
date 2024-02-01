@@ -82,7 +82,11 @@ class FROCProcessor(Processor):
                     continue
                 fonts_detected.append((typegroup, score))
 
-            classification_result = ', '.join([f'{family}:{score}' for family, score in fonts_detected])
+            classification_result = ', '.join([
+                f'{family}:{score}' \
+                for family, score in fonts_detected \
+                if score > self.parameter['min_score_style']
+            ])
 
             if output_font:
                 textStyle = segment.get_TextStyle()
