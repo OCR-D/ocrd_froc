@@ -112,7 +112,11 @@ class FROCProcessor(Processor):
                                           classification_result=result,
                                           fast_cocr=fast_cocr,
                                           adaptive_treshold=adaptive_treshold)
-        segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
+
+        if self.parameter['overwrite_text']:
+            segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
+        else:
+            segment.add_TextEquiv(TextEquivType(Unicode=transcription, conf=score))
 
 
     def process(self):  # type: ignore

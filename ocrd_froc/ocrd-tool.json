@@ -27,6 +27,12 @@
           "required": false,
           "default": true
         },
+        "overwrite_text": {
+          "description": "Whether to remove any existing TextEquiv before adding text",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
         "model": {
           "description": "The file name of the neural network to use, including sufficient path information. Defaults to the model bundled with ocrd_froc.",
           "type": "string",
