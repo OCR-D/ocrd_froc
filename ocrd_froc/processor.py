@@ -2,6 +2,7 @@
 Wrap FROC as an ocrd.Processor
 """
 import os
+from typing import List, Tuple
 
 from ocrd import Processor
 from ocrd_utils import (
@@ -42,14 +43,6 @@ class FROCProcessor(Processor):
         self.froc = Froc.load(model)
 
     def _process_segment(self, segment, image):
-        textStyle = segment.get_TextStyle()
-        if textStyle and self.parameter['overwrite_style']:
-            textStyle = None
-            segment.set_TextStyle(textStyle)
-        if not textStyle:
-            textStyle = TextStyleType()
-            segment.set_TextStyle(textStyle)
-
         ocr_method = self.parameter['ocr_method']
 
         result = {}
@@ -57,7 +50,7 @@ class FROCProcessor(Processor):
         if ocr_method != 'COCR':
 
             result = self.froc.classify(image)
-            classification_result = ''
+            fonts_detected : List[Tuple[str, float]] = []
 
             font_class_priors = self.parameter['font_class_priors']
             output_font = True
@@ -87,12 +80,17 @@ class FROCProcessor(Processor):
                 score = round(100 * score)
                 if score <= 0:
                     continue
-                if classification_result != '':
-                    classification_result += ', '
-                classification_result += '%s:%d' % (typegroup, score)
+                fonts_detected.append((typegroup, score))
+
+            classification_result = ', '.join([f'{family}:{score}' for family, score in fonts_detected])
 
             if output_font:
-                textStyle.set_fontFamily(classification_result)
+                textStyle = segment.get_TextStyle()
+                if not textStyle or self.parameter['overwrite_style']:
+                    if not textStyle:
+                        textStyle = TextStyleType()
+                        segment.set_TextStyle(textStyle)
+                    textStyle.set_fontFamily(classification_result)
 
 
         if ocr_method == 'COCR':

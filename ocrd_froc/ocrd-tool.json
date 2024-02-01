@@ -22,7 +22,7 @@
           "default": "none"
         },
         "overwrite_style": {
-          "description": "Whether to replace existing textStyle before writing new textStyle",
+          "description": "Whether to overwrite existing TextStyle/@fontFamily attributes",
           "type": "boolean",
           "required": false,
           "default": true
