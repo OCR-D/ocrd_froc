@@ -5,6 +5,10 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+Fixed:
+
+  - typo in ocrd-tool.json: `ocrd-froc` -> `ocrd-froc-recognize`
+
 ## [0.5.1] - 2024-02-01
 
 Fixed:
