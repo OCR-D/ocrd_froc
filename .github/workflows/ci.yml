@@ -1,0 +1,44 @@
+# Simple CI test for ocrd_froc.
+
+name: CI tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          # - '3.7'
+          # - '3.8'
+          - '3.9'
+          # - '3.10'
+          # - '3.11'
+        os:
+          - ubuntu-22.04
+          # - macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install and test
+        run: |
+          # Install and test.
+          set -x
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -U pip setuptools wheel
+          pip install -r requirements.txt
+          pip install .
+          ocrd-froc-recognize
