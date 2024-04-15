@@ -106,12 +106,12 @@ class FROCProcessor(Processor):
                                           classification_result=result)
         else:
             fast_cocr = self.parameter['fast_cocr']
-            adaptive_treshold = self.parameter['adaptive_treshold']
+            adaptive_threshold = self.parameter['adaptive_threshold']
             transcription, score = self.froc.run(image,
                                           method=ocr_method,
                                           classification_result=result,
                                           fast_cocr=fast_cocr,
-                                          adaptive_treshold=adaptive_treshold)
+                                          adaptive_threshold=adaptive_threshold)
         segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
 
 

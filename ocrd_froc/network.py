@@ -242,7 +242,7 @@ class OCROnly(torch.nn.Module):
     def __init_length_map(self):
         """
         Initializes the map conversion system for convert_width(). Note
-        that it tries to cache the resuts in dat/length_map.json.
+        that it tries to cache the results in dat/length_map.json.
         """
         max_length = 2000
         try:
@@ -272,7 +272,7 @@ class OCROnly(torch.nn.Module):
         Processes an input batch.
 
         :param x: input batch
-        :return: the network's output, ready to be convered to a string
+        :return: the network's output, ready to be converted to a string
         """
         x = self.backbone(x)
         x = self.act(x)
@@ -400,7 +400,7 @@ class SelOCR(torch.nn.Module):
         single text line (because of the branching).
 
         :param x: input batch
-        :return: the network's output, ready to be convered to a string
+        :return: the network's output, ready to be converted to a string
         """
         if x.shape[0] != 1:
             raise ValueError('SelOCR cannot work on batches containing multiple inputs, sorry')
@@ -540,7 +540,7 @@ class COCR(torch.nn.Module):
         Processes an input batch
 
         :param x: input batch
-        :return: the network's output, ready to be convered to a string
+        :return: the network's output, ready to be converted to a string
         """
         scores = F.softmax(self.classifier(x), dim=2)
         res = 0
@@ -704,7 +704,7 @@ class DHCOCR(torch.nn.Module):
         Processes an input batch
 
         :param x: input batch
-        :return: the network's output, ready to be convered to a string
+        :return: the network's output, ready to be converted to a string
         """
         scores = F.softmax(self.classifier(x), dim=2)
         txt = 0

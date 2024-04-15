@@ -37,14 +37,14 @@
           "type": "boolean",
           "default": true
         },
-        "adaptive_treshold": {
-          "description": "Treshold of certitude needed to use SelOCR when using the adaptive strategy",
+        "adaptive_threshold": {
+          "description": "Threshold of certitude needed to use SelOCR when using the adaptive strategy",
           "type": "number",
           "format": "integer",
           "default": 95
         },
         "font_class_priors": {
-          "description": "List of font classes which are known to be present on the data when using the adaptive/SelOCR strategies. When this option is specified, every font classes not included will be ignored. If 'other' is included in the list, font classification will not be outputted and a generic model will be used for transcriptions.",
+          "description": "List of font classes which are known to be present on the data when using the adaptive/SelOCR strategies. If this option is specified, any font classes not included are ignored. If 'other' is included in the list, no font classification is output and a generic model is used for transcriptions.",
           "type": "array",
           "items": {
             "type": "string",

@@ -73,13 +73,13 @@ Parameters:
     information. Defaults to the model bundled with ocrd_froc.
    "fast_cocr" [boolean - true]
     Whether to use optimization steps on the COCR strategy
-   "adaptive_treshold" [number - 95]
-    Treshold of certitude needed to use SelOCR when using the adaptive
+   "adaptive_threshold" [number - 95]
+    Threshold of certitude needed to use SelOCR when using the adaptive
     strategy
    "font_class_priors" [array - []]
     List of font classes which are known to be present on the data when
-    using the adaptive/SelOCR strategies. When this option is specified,
-    every font classes not included will be ignored. If 'other' is
-    included in the list, font classification will not be outputted and
-    a generic model will be used for transcriptions.
+    using the adaptive/SelOCR strategies. If this option is specified,
+    any font classes not included are ignored. If 'other' is
+    included in the list, no font classification is output and
+    a generic model is used for transcriptions.
 ```

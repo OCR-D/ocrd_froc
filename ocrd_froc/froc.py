@@ -90,7 +90,7 @@ class Froc:
             Parameters
             ----------
                 output: string or file
-                    File or path to the file to which the instane has to
+                    File or path to the file to which the instance has to
                     be stored.
         """
 
@@ -108,7 +108,7 @@ class Froc:
         self.selocr.to(self.dev)
         self.cocr.to(self.dev)
 
-    def run(self, pil_image, method='adaptive', fast_cocr=True, adaptive_treshold=95, classification_result=None):
+    def run(self, pil_image, method='adaptive', fast_cocr=True, adaptive_threshold=95, classification_result=None):
 
         if method in ('SelOCR', 'adaptive') and not classification_result:
             raise ValueError(f"Froc.run(): if method is SelOCR or adaptive, classification_result is required")
@@ -120,7 +120,7 @@ class Froc:
         elif method == 'COCR':
             out = self.run_cocr(tns, fast_cocr)
         else:
-            out = self.run_adaptive(tns, classification_result, fast_cocr, adaptive_treshold)
+            out = self.run_adaptive(tns, classification_result, fast_cocr, adaptive_threshold)
 
         # constrain to image width, expand to batch format (batch size 1)
         base_width = [tns.shape[2]]
@@ -200,8 +200,8 @@ class Froc:
             return out
 
 
-    def run_adaptive(self, tns, classification_result, fast_cocr, adaptive_treshold):
-        if max(classification_result.values()) > adaptive_treshold / 100:
+    def run_adaptive(self, tns, classification_result, fast_cocr, adaptive_threshold):
+        if max(classification_result.values()) > adaptive_threshold / 100:
             return self.run_selocr(tns, classification_result)
         else:
             return self.run_cocr(tns, fast_cocr)
