@@ -21,7 +21,7 @@ from ocrd_utils import resource_filename, resource_string
 from ocrd_modelfactory import page_from_file
 from .froc import Froc
 
-OCRD_TOOL = loads(resource_string(__name__, 'ocrd-tool.json'))
+OCRD_TOOL = loads(resource_string(__package__, 'ocrd-tool.json'))
 
 class FROCProcessor(Processor):
 
