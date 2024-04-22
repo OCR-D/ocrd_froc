@@ -5,6 +5,14 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+Changed:
+
+* rename parameter `replace_textstyle` -> `overwrite_style`, #8, #9
+* rename parameter `network` -> `model`, #8, #9
+* parameter `overwrite_text`: If true, replace all existing textequivs, else (default) just add a textequiv, #8, #9
+* parameter `overwrite_style`: if true (default), replace the `fontFamily` attribute of existing textstyle or create new style if non exists., #8, #9
+* parameter `min_score_style`: Score between 0 and 100, font classification results below this score will not be serialized or used for OCR, default: 0, #8, #9
+
 Fixed:
 
   * Require OCR-D/core v2.64.1+ with proper support for `importlib{.,_}metadata`, #10
