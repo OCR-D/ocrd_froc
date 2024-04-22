@@ -5,6 +5,8 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.6.0] - 2024-04-22
+
 Changed:
 
 * rename parameter `replace_textstyle` -> `overwrite_style`, #8, #9
@@ -36,6 +38,7 @@ Fixed:
 - First release in ocrd_all
 
 <!-- link-labels -->
-[0.5.1]: ../../compare/v0.5.2...v0.5.1
+[0.6.0]: ../../compare/v0.6.0...v0.5.2
+[0.5.2]: ../../compare/v0.5.2...v0.5.1
 [0.5.1]: ../../compare/v0.5.1...v0.5.0
 [0.5.0]: ../../compare/v0.5.0...HEAD
