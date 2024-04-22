@@ -1,5 +1,5 @@
 {
-  "version": "0.5.2",
+  "version": "0.6.0",
   "git_url": "https://github.com/OCR-D/ocrd_froc",
   "tools": {
     "ocrd-froc-recognize": {
@@ -21,13 +21,26 @@
           "enum": ["none", "SelOCR", "COCR", "adaptive"],
           "default": "none"
         },
-        "replace_textstyle": {
-          "description": "Whether to replace existing textStyle",
+        "overwrite_style": {
+          "description": "Whether to overwrite existing TextStyle/@fontFamily attributes",
           "type": "boolean",
           "required": false,
           "default": true
         },
-        "network": {
+        "min_score_style": {
+          "description": "The minimum score of a font classification to be serialized/used as input for OCR",
+          "type": "number",
+          "format": "float",
+          "required": false,
+          "default": 0
+        },
+        "overwrite_text": {
+          "description": "Whether to remove any existing TextEquiv before adding text",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        "model": {
           "description": "The file name of the neural network to use, including sufficient path information. Defaults to the model bundled with ocrd_froc.",
           "type": "string",
           "required": false

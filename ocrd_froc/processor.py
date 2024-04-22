@@ -2,6 +2,7 @@
 Wrap FROC as an ocrd.Processor
 """
 import os
+from typing import List, Tuple
 
 from ocrd import Processor
 from ocrd_utils import (
@@ -21,7 +22,7 @@ from ocrd_utils import resource_filename, resource_string
 from ocrd_modelfactory import page_from_file
 from .froc import Froc
 
-OCRD_TOOL = loads(resource_string(__name__, 'ocrd-tool.json'))
+OCRD_TOOL = loads(resource_string(__package__, 'ocrd-tool.json'))
 
 class FROCProcessor(Processor):
 
@@ -35,21 +36,13 @@ class FROCProcessor(Processor):
 
     def setup(self):
 
-        if 'network' not in self.parameter:
-            self.parameter['network'] = str(resource_filename(f'ocrd_froc.models', 'default.froc'))
+        if 'model' not in self.parameter:
+            self.parameter['model'] = str(resource_filename(f'ocrd_froc.models', 'default.froc'))
 
-        network_file = self.resolve_resource(self.parameter['network'])
-        self.froc = Froc.load(network_file)
+        model = self.resolve_resource(self.parameter['model'])
+        self.froc = Froc.load(model)
 
     def _process_segment(self, segment, image):
-        textStyle = segment.get_TextStyle()
-        if textStyle and self.parameter['replace_textstyle']:
-            textStyle = None
-            segment.set_TextStyle(textStyle)
-        if not textStyle:
-            textStyle = TextStyleType()
-            segment.set_TextStyle(textStyle)
-
         ocr_method = self.parameter['ocr_method']
 
         result = {}
@@ -57,7 +50,7 @@ class FROCProcessor(Processor):
         if ocr_method != 'COCR':
 
             result = self.froc.classify(image)
-            classification_result = ''
+            fonts_detected : List[Tuple[str, float]] = []
 
             font_class_priors = self.parameter['font_class_priors']
             output_font = True
@@ -87,12 +80,21 @@ class FROCProcessor(Processor):
                 score = round(100 * score)
                 if score <= 0:
                     continue
-                if classification_result != '':
-                    classification_result += ', '
-                classification_result += '%s:%d' % (typegroup, score)
+                fonts_detected.append((typegroup, score))
+
+            classification_result = ', '.join([
+                f'{family}:{score}' \
+                for family, score in fonts_detected \
+                if score > self.parameter['min_score_style']
+            ])
 
             if output_font:
-                textStyle.set_fontFamily(classification_result)
+                textStyle = segment.get_TextStyle()
+                if not textStyle or self.parameter['overwrite_style']:
+                    if not textStyle:
+                        textStyle = TextStyleType()
+                        segment.set_TextStyle(textStyle)
+                    textStyle.set_fontFamily(classification_result)
 
 
         if ocr_method == 'COCR':
@@ -111,8 +113,12 @@ class FROCProcessor(Processor):
                                           method=ocr_method,
                                           classification_result=result,
                                           fast_cocr=fast_cocr,
-                                          adaptive_threshold=adaptive_threshold)
-        segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
+                                          adaptive_treshold=adaptive_threshold)
+
+        if self.parameter['overwrite_text']:
+            segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
+        else:
+            segment.add_TextEquiv(TextEquivType(Unicode=transcription, conf=score))
 
 
     def process(self):  # type: ignore
