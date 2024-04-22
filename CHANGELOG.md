@@ -5,6 +5,10 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+Fixed:
+
+  * Require OCR-D/core v2.64.1+ with proper support for `importlib{.,_}metadata`, #10
+
 ## [0.5.2] - 2024-02-01
 
 Fixed:
