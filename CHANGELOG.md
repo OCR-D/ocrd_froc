@@ -8,6 +8,7 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 Fixed:
 
   * Require OCR-D/core v2.64.1+ with proper support for `importlib{.,_}metadata`, #10
+  * CI: Use most recent actions, #15
 
 ## [0.5.2] - 2024-02-01
 
