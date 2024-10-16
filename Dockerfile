@@ -10,7 +10,7 @@ LABEL \
 
 WORKDIR /build/ocrd_froc
 COPY pyproject.toml .
-COPY ocrd_froc/ocrd-tool.json .
+COPY ocrd-tool.json .
 COPY ocrd_froc ./ocrd_froc
 COPY requirements.txt .
 COPY README.md .
