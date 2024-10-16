@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel", "setuptools-ocrd"]
+
+[project]
+name = "ocrd_froc"
+authors = [{name = "Guillaume Carriere"}, {name = "Matthias Seuret"}, {name = "Konstantin Baierer"}]
+license = {text = "Apache License 2.0"}
+description = "font recognition and OCR"
+requires-python = ">=3.8"
+dynamic = ["version", "dependencies"]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[tool.setuptools.dynamic.dependencies]
+file = ["requirements.txt"]
+
+[project.urls]
+Repository = "https://github.com/OCR-D/ocrd_froc"
+
+[project.scripts]
+ocrd-froc-recognize = "ocrd_froc.cli.ocrd_cli:cli"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["*.json", '*.froc']
