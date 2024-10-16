@@ -1,4 +1,4 @@
-DOCKER_BASE_IMAGE = docker.io/ocrd/core-cuda-torch:v2.69.0
+DOCKER_BASE_IMAGE = docker.io/ocrd/core-cuda-torch:v2.70.0
 DOCKER_TAG = ocrd/froc
 
 install:
