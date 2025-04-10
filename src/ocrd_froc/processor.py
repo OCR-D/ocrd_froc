@@ -76,6 +76,8 @@ class FROCProcessor(Processor):
 
         if ocr_method != 'COCR':
 
+            # do the font classification
+
             result = self.froc.classify(image)
             fonts_detected : List[Tuple[str, float]] = []
 
@@ -124,25 +126,26 @@ class FROCProcessor(Processor):
                     textStyle.set_fontFamily(classification_result)
 
 
-        if ocr_method == 'COCR':
-            fast_cocr = self.parameter['fast_cocr']
-            transcription, score = self.froc.run(image,
-                                          method=ocr_method,
-                                          fast_cocr=fast_cocr)
-        elif ocr_method == 'SelOCR':
-            transcription, score = self.froc.run(image,
-                                          method=ocr_method,
-                                          classification_result=result)
-        else:
-            fast_cocr = self.parameter['fast_cocr']
-            adaptive_threshold = self.parameter['adaptive_threshold']
-            transcription, score = self.froc.run(image,
-                                          method=ocr_method,
-                                          classification_result=result,
-                                          fast_cocr=fast_cocr,
-                                          adaptive_threshold=adaptive_threshold)
+        if ocr_method != "none":
+            if ocr_method == 'COCR':
+                fast_cocr = self.parameter['fast_cocr']
+                transcription, score = self.froc.run(image,
+                                              method=ocr_method,
+                                              fast_cocr=fast_cocr)
+            elif ocr_method == 'SelOCR':
+                transcription, score = self.froc.run(image,
+                                              method=ocr_method,
+                                              classification_result=result)
+            elif ocr_method == 'adaptive':
+                fast_cocr = self.parameter['fast_cocr']
+                adaptive_threshold = self.parameter['adaptive_threshold']
+                transcription, score = self.froc.run(image,
+                                              method=ocr_method,
+                                              classification_result=result,
+                                              fast_cocr=fast_cocr,
+                                              adaptive_threshold=adaptive_threshold)
 
-        if self.parameter['overwrite_text']:
-            segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
-        else:
-            segment.add_TextEquiv(TextEquivType(Unicode=transcription, conf=score))
+            if self.parameter['overwrite_text']:
+                segment.set_TextEquiv([TextEquivType(Unicode=transcription, conf=score)])
+            else:
+                segment.add_TextEquiv(TextEquivType(Unicode=transcription, conf=score))
