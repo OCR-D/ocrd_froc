@@ -12,7 +12,7 @@ from ocrd_utils import pushd_popd, disableLogging, initLogging, setOverrideLogLe
 
 from .assets import assets
 
-DEFAULT_WS = "kant_aufklaerung_1784"
+DEFAULT_WS = "kant_aufklaerung_1784-complex"
 WORKSPACES = {
     DEFAULT_WS: assets.path_to(os.path.join(DEFAULT_WS, 'data', 'mets.xml')),
 }
@@ -66,7 +66,6 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("asset", ws)
 
 CONFIGS = ['', 'pageparallel', 'metscache', 'pageparallel+metscache']
-CONFIGS = ['']
 
 @pytest.fixture(params=CONFIGS)
 def processor_kwargs(request, workspace):

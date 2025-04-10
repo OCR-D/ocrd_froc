@@ -41,7 +41,7 @@ tests/assets: repo/assets
 	cp -r $</data/* $@
 
 test: tests/assets deps-test
-	$(PYTHON) -m pytest tests --durations=0 --continue-on-collection-errors $(PYTEST_ARGS)
+	$(PYTHON) -m pytest -vv tests --durations=0 --continue-on-collection-errors $(PYTEST_ARGS)
 
 coverage: deps-test
 	coverage erase
