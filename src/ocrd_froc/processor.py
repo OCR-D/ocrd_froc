@@ -14,6 +14,8 @@ from .froc import Froc
 
 class FROCProcessor(Processor):
 
+    max_workers = 1 # Torch CUDA context cannot be shared across fork mp
+
     @cached_property
     def executable(self):
         return 'ocrd-froc-recognize'
