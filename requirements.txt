@@ -1,4 +1,4 @@
-ocrd >= 2.64.1
+ocrd >= 3.3.0
 pandas
 scikit-image
 torch >= 1.4.0

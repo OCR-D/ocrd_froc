@@ -1,6 +1,7 @@
 {
   "version": "0.6.1",
   "git_url": "https://github.com/OCR-D/ocrd_froc",
+  "dockerhub": "ocrd/froc",
   "tools": {
     "ocrd-froc-recognize": {
       "executable": "ocrd-froc",
@@ -12,8 +13,8 @@
         "recognition/font-identification",
         "recognition/text-recognition"
       ],
-      "input_file_grp": ["OCR-D-SEG"],
-      "output_file_grp": ["OCR-D-OCR"],
+      "input_file_grp_cardinality": 1,
+      "output_file_grp_cardinality": 1,
       "parameters": {
         "ocr_method": {
           "description": "The method to use for text recognition",
@@ -43,6 +44,7 @@
         "model": {
           "description": "The file name of the neural network to use, including sufficient path information. Defaults to the model bundled with ocrd_froc.",
           "type": "string",
+          "default": "default.froc",
           "required": false
         },
         "fast_cocr": {
