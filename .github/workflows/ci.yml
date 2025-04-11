@@ -31,13 +31,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install and test
+      - name: Build
         run: |
-          # Install and test.
-          set -x
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -U pip setuptools wheel
-          pip install -r requirements.txt
-          pip install .
-          ocrd-froc-recognize --help
+          python3 --version
+          make deps deps-test
+          make install
+          pip check
+      - name: Smoke test
+        run: ocrd-froc-recognize --help
+      - name: Test
+        run: make test
