@@ -3,5 +3,5 @@ dist
 build
 repo
 *.egg-info
-.circleci
+.git
 .github
