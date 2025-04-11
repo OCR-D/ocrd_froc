@@ -5,6 +5,10 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+Fixed:
+
+  * `Dockerfile`: Also build `ocrd-all-tool.json`, document XDG variables, #20
+
 ## [1.0.0] - 2025-04-11
 
 Changed:
