@@ -5,9 +5,20 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+Changed:
+
+  * :fire: port processor to v3 OCR-D/core API, #19
+  * switch to `src-layout`, #19
+
+Added:
+
+  * Unit tests, CI and CD, #19
+
 Fixed:
 
   * Typos corrected, #16
+  * `ocr_method="none"` actually skips OCR, ran `adaptive` before, #19
+  * typo corrected that prevented adaptive OCR, #19
 
 ## [0.6.0] - 2024-04-22
 
