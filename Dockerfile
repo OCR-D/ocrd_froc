@@ -14,7 +14,7 @@ LABEL \
     org.opencontainers.image.documentation="https://github.com/OCR-D/ocrd_froc/blob/${VCS_REF}/README.md" \
     org.opencontainers.image.revision=$VCS_REF \
     org.opencontainers.image.created=$BUILD_DATE \
-    org.opencontainers.image.base.name=ubuntu:20.04
+    org.opencontainers.image.base.name=ocrd/core-cuda-torch
 
 WORKDIR /build/ocrd_froc
 COPY pyproject.toml .
