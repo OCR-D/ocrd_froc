@@ -5,6 +5,8 @@ Versioned according to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [1.0.1] - 2025-04-11
+
 Fixed:
 
   * `Dockerfile`: Also build `ocrd-all-tool.json`, document XDG variables, #20
@@ -59,6 +61,7 @@ Fixed:
 - First release in ocrd_all
 
 <!-- link-labels -->
+[1.0.1]: ../../compare/v1.0.1...v1.0.0
 [1.0.0]: ../../compare/v1.0.0...v0.6.1
 [0.6.1]: ../../compare/v0.6.1...v0.6.0
 [0.6.0]: ../../compare/v0.6.0...v0.5.2
