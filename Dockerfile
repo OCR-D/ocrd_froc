@@ -25,6 +25,7 @@ ENV XDG_CONFIG_HOME /usr/local/share/ocrd-resources
 
 WORKDIR /build/ocrd_froc
 COPY . .
+COPY src/ocrd_froc/ocrd-tool.json .
 RUN make install \
 	&& rm -rf /build/ocrd_froc
 
