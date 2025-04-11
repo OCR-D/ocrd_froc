@@ -16,13 +16,15 @@ LABEL \
     org.opencontainers.image.created=$BUILD_DATE \
     org.opencontainers.image.base.name=ocrd/core-cuda-torch
 
+ENV PYTHONIOENCODING utf8
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+
+ENV XDG_DATA_HOME /usr/local/share
+ENV XDG_CONFIG_HOME /usr/local/share/ocrd-resources
+
 WORKDIR /build/ocrd_froc
-COPY pyproject.toml .
-COPY ocrd-tool.json .
-COPY ocrd_froc ./ocrd_froc
-COPY requirements.txt .
-COPY README.md .
-COPY Makefile .
+COPY . .
 RUN make install \
 	&& rm -rf /build/ocrd_froc
 

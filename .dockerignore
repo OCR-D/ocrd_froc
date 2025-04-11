@@ -1,0 +1,7 @@
+test
+dist
+build
+repo
+*.egg-info
+.circleci
+.github
