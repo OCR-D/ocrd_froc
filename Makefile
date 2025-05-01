@@ -1,7 +1,8 @@
 PYTHON = python3
 PIP = pip
-DOCKER_BASE_IMAGE = docker.io/ocrd/core-cuda-torch:v3.3.0
-DOCKER_TAG = ocrd/froc
+DOCKER_BASE_IMAGE ?= docker.io/ocrd/core-cuda-torch:latest
+DOCKER_TAG ?= ocrd/froc
+DOCKER ?= docker
 
 install:
 	pip install .
@@ -13,7 +14,7 @@ deps:
 	pip install -r requirements.txt
 
 docker:
-	docker build \
+	$(DOCKER) build \
 	--build-arg DOCKER_BASE_IMAGE=$(DOCKER_BASE_IMAGE) \
 	--build-arg VCS_REF=$$(git rev-parse --short HEAD) \
 	--build-arg BUILD_DATE=$$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
@@ -48,4 +49,3 @@ coverage: deps-test
 	$(MAKE) test PYTHON="coverage run"
 	coverage combine
 	coverage report -m
-
